@@ -57,13 +57,19 @@ const orderSchema = new mongoose.Schema({
   // order tracking
   status: {
     type: String,
-    enum: ["processing", "outForDelivery", "delivered"],
-    default: "processing",
+    enum: ["pending", "processing", "preparing", "outForDelivery", "delivered", "cancelled"],
+    default: "pending",
     index: true,
   },
 
   expectedDelivery: Date,
   deliveredAt: Date,
+
+  // soft deletion flags
+  deletedByAdmin: { type: Boolean, default: false, index: true },
+  deletedByCustomer: { type: Boolean, default: false, index: true },
+  adminDeletedAt: Date,
+  customerDeletedAt: Date,
 
   // timestamps
   createdAt: { type: Date, default: Date.now, index: true },

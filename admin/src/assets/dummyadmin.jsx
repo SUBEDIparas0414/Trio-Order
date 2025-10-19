@@ -1,7 +1,7 @@
 import {
     FiPlusCircle,
     FiList,
-    FiPackage,FiTruck, FiCheckCircle, FiClock,
+    FiPackage,FiTruck, FiCheckCircle, FiClock, FiX,
 } from 'react-icons/fi';
 
 
@@ -72,20 +72,35 @@ export const iconMap = {
     FiClock: <FiClock className="text-lg" />,
     FiTruck: <FiTruck className="text-lg" />,
     FiCheckCircle: <FiCheckCircle className="text-lg" />,
+    FiX: <FiX className="text-lg" />,
 };
 
 // Status styles for order statuses
 export const statusStyles = {
+    pending: {
+        color: 'text-yellow-400',
+        bg: 'bg-yellow-900/20',
+        icon: 'FiClock',
+        label: 'Pending',
+        hideLabel: false,
+    },
     processing: {
-        color: 'text-amber-400',
-        bg: 'bg-amber-900/20',
+        color: 'text-blue-400',
+        bg: 'bg-blue-900/20',
         icon: 'FiClock',
         label: 'Processing',
         hideLabel: false,
     },
+    preparing: {
+        color: 'text-orange-400',
+        bg: 'bg-orange-900/20',
+        icon: 'FiClock',
+        label: 'Preparing',
+        hideLabel: false,
+    },
     outForDelivery: {
-        color: 'text-blue-400',
-        bg: 'bg-blue-900/20',
+        color: 'text-purple-400',
+        bg: 'bg-purple-900/20',
         icon: 'FiTruck',
         label: 'Out for Delivery',
         hideLabel: false,
@@ -95,6 +110,13 @@ export const statusStyles = {
         bg: 'bg-green-900/20',
         icon: 'FiCheckCircle',
         label: 'Delivered',
+        hideLabel: false,
+    },
+    cancelled: {
+        color: 'text-red-400',
+        bg: 'bg-red-900/20',
+        icon: 'FiX',
+        label: 'Cancelled',
         hideLabel: false,
     },
     succeeded: {

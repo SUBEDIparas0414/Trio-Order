@@ -4,8 +4,8 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 
 // create a token
-const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET);
+const createToken = (id, email) => {
+  return jwt.sign({ id, email }, process.env.JWT_SECRET);
 };
 
 // login
@@ -24,7 +24,7 @@ const loginUser = async (req, res) => {
       return res.json({ success: false, message: "Invalid credential" });
     }
 
-    const token = createToken(user._id);
+    const token = createToken(user._id, user.email);
     res.json({ success: true, token });
   } catch (error) {
     console.log(error);
@@ -67,11 +67,11 @@ const registerUser = async (req, res) => {
 
     const user = await newUser.save();
 
-    const token = createToken(user._id);
+    const token = createToken(user._id, user.email);
     res.json({ success: true, token });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "error" });
+    console.error('Registration error:', error);
+    res.status(500).json({ success: false, message: error.message || "Registration failed" });
   }
 };
 

@@ -1,35 +1,107 @@
-import React, { useEffect, useState } from "react";
-import { layoutClasses, tableClasses, statusStyles, paymentMethodDetails, iconMap } from "../assets/dummyadmin";
-import { FiBox, FiUser } from "react-icons/fi";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { 
+  FiSearch, 
+  FiFilter, 
+  FiEye, 
+  FiClock, 
+  FiTruck, 
+  FiCheckCircle, 
+  FiX,
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiBox,
+  FiShoppingBag,
+  FiCalendar,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiLoader
+} from 'react-icons/fi';
 
 const Order = () => {
+  // State management
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:4000/api/orders/getall",
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        );
+  // Status configuration
+  const statusConfig = {
+    pending: { 
+      color: 'text-yellow-400', 
+      bg: 'bg-yellow-900/20', 
+      icon: FiClock, 
+      label: 'Pending' 
+    },
+    processing: { 
+      color: 'text-blue-400', 
+      bg: 'bg-blue-900/20', 
+      icon: FiClock, 
+      label: 'Processing' 
+    },
+    preparing: { 
+      color: 'text-orange-400', 
+      bg: 'bg-orange-900/20', 
+      icon: FiClock, 
+      label: 'Preparing' 
+    },
+    outForDelivery: { 
+      color: 'text-purple-400', 
+      bg: 'bg-purple-900/20', 
+      icon: FiTruck, 
+      label: 'Out for Delivery' 
+    },
+    delivered: { 
+      color: 'text-green-400', 
+      bg: 'bg-green-900/20', 
+      icon: FiCheckCircle, 
+      label: 'Delivered' 
+    },
+    cancelled: { 
+      color: 'text-red-400', 
+      bg: 'bg-red-900/20', 
+      icon: FiX, 
+      label: 'Cancelled' 
+    }
+  };
 
-        const formatted = response.data.map((order) => ({
+  // Payment configuration
+  const paymentConfig = {
+    cod: { 
+      label: 'Cash on Delivery', 
+      class: 'bg-yellow-600/30 text-yellow-300 border border-yellow-500/50' 
+    },
+    online: { 
+      label: 'Online Payment', 
+      class: 'bg-green-600/30 text-green-300 border border-green-500/50' 
+    }
+  };
+
+  // Fetch orders with error handling
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.get('http://localhost:4000/api/orders/getall', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const formattedOrders = response.data.orders.map(order => ({
           ...order,
-          address: order.address ?? order.shippingAddress?.address ?? "",
-          city: order.city ?? order.shippingAddress?.city ?? "",
-          zipCode: order.zipCode ?? order.shippingAddress?.zipCode ?? "",
-          phone: order.phone ?? "",
-          items:
-            order.items?.map((e) => ({
-              _id: e._id,
-              item: e.item,
-              quantity: e.quantity,
-            })) || [],
           createdAt: new Date(order.createdAt).toLocaleDateString("en-IN", {
             year: "numeric",
             month: "long",
@@ -37,223 +109,782 @@ const Order = () => {
             hour: "2-digit",
             minute: "2-digit",
           }),
+          expectedDelivery: order.expectedDelivery ? new Date(order.expectedDelivery).toLocaleDateString("en-IN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }) : null,
+          deliveredAt: order.deliveredAt ? new Date(order.deliveredAt).toLocaleDateString("en-IN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }) : null,
         }));
-
-        setOrders(formatted);
-        setError(null);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load orders.");
-      } finally {
-        setLoading(false);
+        
+        setOrders(formattedOrders);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch orders');
       }
-    };
-    fetchOrders();
-  }, []);
-
-  const handleStatusChange = async (orderId, newStatus) => {
-    try {
-      await axios.put(`http://localhost:4000/api/orders/getall/${orderId}`, {
-        status: newStatus,
-      });
-      setOrders(orders.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o)));
     } catch (err) {
-      alert(err.response?.data?.message || "failed to update order status");
+      console.error('Error fetching orders:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to fetch orders');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading)
-    return (
-      <div className={layoutClasses.page + " flex items-center justify-center"}>
-        <div className="text-amber-400 text-xl">loading orders</div>
-      </div>
-    );
+  // Handle order deletion by admin
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to delete this order from the admin panel? This will not affect the customer\'s order history.')) {
+      return;
+    }
 
-  if (error)
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.delete(`http://localhost:4000/api/orders/getall/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        // Remove order from local state
+        setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+        
+        // Close modal if it's the deleted order
+        if (selectedOrder && selectedOrder._id === orderId) {
+          closeModal();
+        }
+        
+        alert('✅ Order deleted successfully from admin panel!\n\nThe customer\'s order history remains unchanged.');
+      } else {
+        throw new Error(response.data.message || 'Failed to delete order');
+      }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      alert(`❌ Failed to delete order!\n\nError: ${err.response?.data?.message || err.message}\n\nPlease try again.`);
+    }
+  };
+
+  // Handle status change with comprehensive error handling
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      setUpdatingStatus(orderId);
+      
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.put(`http://localhost:4000/api/orders/getall/${orderId}`, {
+        status: newStatus,
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        // Update orders list
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order._id === orderId 
+              ? { 
+                  ...order, 
+                  status: newStatus,
+                  expectedDelivery: response.data.order?.expectedDelivery ? new Date(response.data.order.expectedDelivery).toLocaleDateString("en-IN", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }) : order.expectedDelivery,
+                  deliveredAt: response.data.order?.deliveredAt ? new Date(response.data.order.deliveredAt).toLocaleDateString("en-IN", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }) : order.deliveredAt,
+                } 
+              : order
+          )
+        );
+        
+        // Update selected order if it's the one being updated
+        if (selectedOrder && selectedOrder._id === orderId) {
+          setSelectedOrder(prev => ({
+            ...prev,
+            status: newStatus,
+            expectedDelivery: response.data.order?.expectedDelivery ? new Date(response.data.order.expectedDelivery).toLocaleDateString("en-IN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }) : prev.expectedDelivery,
+            deliveredAt: response.data.order?.deliveredAt ? new Date(response.data.order.deliveredAt).toLocaleDateString("en-IN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }) : prev.deliveredAt,
+          }));
+        }
+        
+        // Show success notification
+        const statusLabels = {
+          pending: 'Pending',
+          processing: 'Processing', 
+          preparing: 'Preparing',
+          outForDelivery: 'Out for Delivery',
+          delivered: 'Delivered',
+          cancelled: 'Cancelled'
+        };
+        
+        alert(`✅ Order status updated successfully!\n\nOrder #${orderId.slice(-8)} is now: ${statusLabels[newStatus]}\n\nThe customer will see this update in their order history.`);
+        
+      } else {
+        throw new Error(response.data.message || 'Failed to update order status');
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert(`❌ Failed to update order status!\n\nError: ${err.response?.data?.message || err.message}\n\nPlease try again.`);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  // Open order details modal
+  const openOrderDetails = (order) => {
+    setSelectedOrder(order);
+    setShowModal(true);
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedOrder(null);
+  };
+
+  // Refresh orders
+  const refreshOrders = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  // Filter orders
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      `${order.firstName} ${order.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.phone.includes(searchTerm);
+    
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Calculate total price for an order
+  const calculateTotalPrice = (items) => {
+    return items.reduce((total, item) => total + (item.item.price * item.quantity), 0);
+  };
+
+  // Load orders on component mount and when refresh is triggered
+  useEffect(() => {
+    fetchOrders();
+  }, [refreshTrigger]);
+
+  // Loading state
+  if (loading) {
     return (
-      <div className={layoutClasses.page + " flex items-center justify-center"}>
-        <div className="text-red-400 text-xl">{error}</div>
+      <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] flex items-center justify-center">
+        <div className="text-center">
+          <FiLoader className="text-6xl text-amber-400 animate-spin mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-amber-300 mb-2">Loading Orders...</h2>
+          <p className="text-amber-400/70">Please wait while we fetch your order data</p>
+        </div>
       </div>
     );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <FiAlertCircle className="text-6xl text-red-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-red-300 mb-2">Error Loading Orders</h2>
+          <p className="text-red-400/70 mb-6">{error}</p>
+          <button
+            onClick={refreshOrders}
+            className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 mx-auto"
+          >
+            <FiRefreshCw />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={layoutClasses.page}>
+    <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className={layoutClasses.card}>
-          <h2 className={layoutClasses.heading}>Order Management</h2>
-          <div className={tableClasses.wrapper}>
-            <table className={tableClasses.table}>
-              <thead>
-                <tr className={tableClasses.headerRow}>
-                  {[
-                    "Order ID",
-                    "Customer",
-                    "Address",
-                    "Items",
-                    "Total Items",
-                    "Price",
-                    "Payment",
-                    "Status",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className={
-                        tableClasses.headerCell +
-                        (h === "Total Items" ? " text-center" : "")
-                      }
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => {
-                  const totalItems = order.items.reduce(
-                    (s, i) => s + i.quantity,
-                    0
-                  );
-                  const totalPrice =
-                    order.total ??
-                    order.items.reduce(
-                      (s, i) => s + i.item.price * i.quantity,
-                      0
-                    );
-                  const payMethod =
-                    paymentMethodDetails[order.paymentMethod?.toLowerCase()] ||
-                    paymentMethodDetails.default;
-                  const payStatusStyle =
-                    statusStyles[order.paymentStatus] ||
-                    statusStyles.processing;
-                  const stat =
-                    statusStyles[order.status] || statusStyles.processing;
+        {/* Header */}
+        <div className="bg-[#4b3b3b]/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-amber-500/20">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
+              Order Management System
+            </h1>
+            <p className="text-amber-400/70 text-lg">Manage customer orders efficiently</p>
+            <div className="flex items-center justify-center gap-2 text-amber-400/60 text-sm mt-2">
+              <span>💡</span>
+              <span>Scroll horizontally to view all order details</span>
+              <span>→</span>
+            </div>
+          </div>
 
-                  return (
-                    <tr key={order._id} className={tableClasses.row}>
-                      <td
-                        className={
-                          tableClasses.cellBase +
-                          " font-mono text-sm text-amber-100"
-                        }
-                      >
-                        #{order._id.slice(-8)}
-                      </td>
-                      <td className={tableClasses.cellBase}>
-                        <div className="flex items-center gap-2">
-                          <FiUser className="text-amber-400" />
-                          <div>
-                            <p className="text-amber-100">
-                              {order.user?.name ||
-                                order.firstName + " " + order.lastName}
-                            </p>
-                            <p className="text-sm text-amber-400/60">
-                              {order.user?.phone || order.phone}
-                            </p>
-                            <p className="text-sm text-amber-400/60">
-                              {order.user?.email || order.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className={tableClasses.cellBase}>
-                        <div className="text-amber-100/80 text-sm max-w-[200px]">
-                          {order.address},{order.city}- {order.zipCode}
-                        </div>
-                      </td>
-                      <td className={tableClasses.cellBase}>
-                        <div className="space-y-1 max-h-52 overflow-auto">
-                          {order.items.map((itm, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-3 p-2 rounded-lg"
-                            >
-                              <img
-                                src={`http://localhost:4000${itm.item.imageUrl}`}
-                                alt={itm.item.name}
-                                className="w-10 h-10 object-cover rounded-lg"
-                              />
-                              <div className="flex-1">
-                                <span className="text-amber-100/80 text-sm block truncate">
-                                  {itm.item.name}
-                                </span>
-                                <div className="flex items-center gap-2 text-xs text-amber-400/60">
-                                  <span>₹{itm.item.price.toFixed(2)}</span>
-                                  <span>&dot;</span>
-                                  <span>x{itm.quantity}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </td>
-                      <td className={tableClasses.cellBase + " text-center"}>
-                        <div className="flex items-center justify-center gap-1">
-                          <FiBox className="text-amber-400" />
-                          <span className="text-amber-300 text-lg">
-                            {totalItems}
-                          </span>
-                        </div>
-                      </td>
-                      <td
-                        className={
-                          tableClasses.cellBase + " text-amber-300 text-lg"
-                        }
-                      >
-                        ₹{totalPrice.toFixed(2)}
-                      </td>
-                      <td className={tableClasses.cellBase}>
-                        <div className="flex flex-col gap-2">
-                          <div
-                            className={`${payMethod.class} px-3 py-1.5 rounded-lg border text-sm`}
-                          >
-                            {payMethod.label}
-                          </div>
-                          <div
-                            className={`${payStatusStyle.color} flex items-center gap-2 text-sm`}
-                          >
-                            {iconMap[payStatusStyle.icon]}
-                            <span>{payStatusStyle.label}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className={tableClasses.cellBase}>
-                        <div className="flex items-center gap-2">
-                          <span className={`${stat.color} text-xl`}>
-                            {iconMap[stat.icon]}
-                          </span>
-                          <select
-                            value={order.status}
-                            onChange={(e) =>
-                              handleStatusChange(order._id, e.target.value)
-                            }
-                            className={`px-4 py-2 rounded-lg ${stat.bg} ${stat.color} border border-amber-500/20 text-sm cursor-pointer`}
-                          >
-                            {Object.entries(statusStyles)
-                              .filter(([k]) => k !== "succeeded")
-                              .map(([key, sty]) => (
-                                <option
-                                  value={key}
-                                  key={key}
-                                  className={`${sty.bg} ${sty.color}`}
-                                >
-                                  {sty.label}
-                                </option>
-                              ))}
-                          </select>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-[#3a2b2b]/50 p-4 rounded-lg text-center">
+              <div className="text-2xl font-bold text-amber-300">{orders.length}</div>
+              <div className="text-amber-400/70 text-sm">Total Orders</div>
+            </div>
+            <div className="bg-[#3a2b2b]/50 p-4 rounded-lg text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                {orders.filter(o => o.status === 'pending' || o.status === 'processing').length}
+              </div>
+              <div className="text-amber-400/70 text-sm">Active Orders</div>
+            </div>
+            <div className="bg-[#3a2b2b]/50 p-4 rounded-lg text-center">
+              <div className="text-2xl font-bold text-green-400">
+                {orders.filter(o => o.status === 'delivered').length}
+              </div>
+              <div className="text-amber-400/70 text-sm">Delivered</div>
+            </div>
+            <div className="bg-[#3a2b2b]/50 p-4 rounded-lg text-center">
+              <div className="text-2xl font-bold text-red-400">
+                {orders.filter(o => o.status === 'cancelled').length}
+              </div>
+              <div className="text-amber-400/70 text-sm">Cancelled</div>
+            </div>
+          </div>
+
+          {/* Search and Filter Controls */}
+          <div className="mb-6 flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+              <input
+                type="text"
+                placeholder="Search by order ID, customer name, email, or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-[#3a2b2b]/50 border border-amber-500/20 rounded-lg text-amber-100 placeholder-amber-400/50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-400 transition-all"
+              />
+            </div>
+            <div className="relative">
+              <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="pl-10 pr-8 py-3 bg-[#3a2b2b]/50 border border-amber-500/20 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-400 transition-all min-w-[150px]"
+              >
+                <option value="all" className="bg-[#3a2b2b]">All Status</option>
+                {Object.entries(statusConfig).map(([key, config]) => (
+                  <option key={key} value={key} className="bg-[#3a2b2b]">
+                    {config.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={refreshOrders}
+              className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-lg transition-colors flex items-center gap-2"
+            >
+              <FiRefreshCw />
+              Refresh
+            </button>
+          </div>
+
+          {/* Orders Table */}
+          <div className="overflow-x-auto relative">
+            {/* Scroll Indicators */}
+            <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500/20 to-transparent w-8 h-full pointer-events-none z-10"></div>
+            <div className="absolute bottom-0 right-0 bg-gradient-to-l from-amber-500/20 to-transparent w-8 h-full pointer-events-none z-10"></div>
+            
+            <div className="relative">
+              {/* Custom Scrollbar Styling */}
+              <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                  height: 12px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                  background: #3a2b2b;
+                  border-radius: 6px;
+                  border: 1px solid #4a3b3b;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                  background: linear-gradient(90deg, #f59e0b, #d97706);
+                  border-radius: 6px;
+                  border: 1px solid #b45309;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                  background: linear-gradient(90deg, #d97706, #b45309);
+                  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+                }
+                .custom-scrollbar::-webkit-scrollbar-corner {
+                  background: #3a2b2b;
+                }
+              `}</style>
+              
+              <table className="w-full min-w-[1200px] custom-scrollbar">
+                <thead>
+                  <tr className="bg-[#3a2b2b]/50">
+                    <th className="p-4 text-left text-amber-400 w-32">Order ID</th>
+                    <th className="p-4 text-left text-amber-400 w-48">Customer</th>
+                    <th className="p-4 text-left text-amber-400 w-40">Contact</th>
+                    <th className="p-4 text-left text-amber-400 w-48">Address</th>
+                    <th className="p-4 text-left text-amber-400 w-64">Items</th>
+                    <th className="p-4 text-center text-amber-400 w-32">Total</th>
+                    <th className="p-4 text-left text-amber-400 w-40">Payment</th>
+                    <th className="p-4 text-left text-amber-400 w-48">Status</th>
+                    <th className="p-4 text-left text-amber-400 w-24">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="p-8 text-center">
+                        <div className="text-amber-400/70">
+                          <FiBox className="text-4xl mx-auto mb-2" />
+                          <p className="text-lg">No orders found</p>
+                          <p className="text-sm">Try adjusting your search or filter criteria</p>
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {orders.length === 0 && (
-            <div className="text-center py-12 text-amber-100/60 text-xl">
-              No orders found
+                  ) : (
+                    filteredOrders.map((order) => {
+                      const statusInfo = statusConfig[order.status] || statusConfig.pending;
+                      const StatusIcon = statusInfo.icon;
+                      const totalPrice = calculateTotalPrice(order.items);
+                      
+                      return (
+                        <tr key={order._id} className="border-b border-amber-500/10 hover:bg-[#3a2b2b]/30 transition-colors">
+                          <td className="p-4">
+                            <div className="font-mono text-amber-300 text-sm">
+                              #{order._id.slice(-8)}
+                            </div>
+                            <div className="text-xs text-amber-400/60">
+                              {order.createdAt}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <FiUser className="text-amber-400" />
+                              <div>
+                                <div className="text-amber-100 font-medium">
+                                  {order.firstName} {order.lastName}
+                                </div>
+                                <div className="text-xs text-amber-400/60">
+                                  {order.email}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <FiPhone className="text-amber-400" />
+                              <span className="text-amber-100 text-sm">{order.phone}</span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-start gap-2">
+                              <FiMapPin className="text-amber-400 mt-1 flex-shrink-0" />
+                              <div className="text-amber-100 text-sm">
+                                <div className="truncate max-w-[200px]" title={order.address}>
+                                  {order.address}
+                                </div>
+                                <div className="text-xs text-amber-400/60">
+                                  {order.city} - {order.zipCode}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                              {order.items.map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-[#3a2b2b]/30 hover:bg-[#3a2b2b]/50 transition-colors">
+                                  <div className="relative">
+                                  <img
+                                    src={item.item.imageUrl ? 
+                                      (item.item.imageUrl.startsWith('http') ? 
+                                        item.item.imageUrl : 
+                                        `http://localhost:4000${item.item.imageUrl}`) : 
+                                      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMyYTJhMmEiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjM2EzYTNhIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMiIgcng9IjgiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMjAiIGZpbGw9IiM2NjYiLz48cGF0aCBkPSJNNjAgMTQwIEwxMDAgMTAwIEwxNDAgMTQwIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHRleHQgeD0iMTAwIiB5PSIxNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+"
+                                    }
+                                    alt={item.item.name}
+                                    className="w-12 h-12 object-cover rounded-lg flex-shrink-0 border border-amber-500/20"
+                                    onError={(e) => {
+                                      console.log('Image failed to load:', e.target.src);
+                                      e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMyYTJhMmEiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjM2EzYTNhIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMiIgcng9IjgiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMjAiIGZpbGw9IiM2NjYiLz48cGF0aCBkPSJNNjAgMTQwIEwxMDAgMTAwIEwxNDAgMTQwIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHRleHQgeD0iMTAwIiB5PSIxNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+";
+                                    }}
+                                  />
+                                    <div className="absolute -top-1 -right-1 bg-amber-500 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                      {item.quantity}
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-amber-100/90 text-sm block truncate font-medium">
+                                      {item.item.name}
+                                    </span>
+                                    <div className="flex items-center gap-2 text-xs text-amber-400/70">
+                                      <span>₹{item.item.price.toFixed(2)}</span>
+                                      <span>&dot;</span>
+                                      <span>x{item.quantity}</span>
+                                      <span className="text-amber-300 font-medium">
+                                        = ₹{(item.item.price * item.quantity).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <FiBox className="text-amber-400" />
+                              <span className="text-amber-300 text-lg font-medium">
+                                ₹{totalPrice.toFixed(2)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${paymentConfig[order.paymentMethod?.toLowerCase()]?.class || paymentConfig.online.class}`}>
+                                {paymentConfig[order.paymentMethod?.toLowerCase()]?.label || 'Online Payment'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 mt-1">
+                              <StatusIcon className="text-lg" />
+                              <span>{order.paymentStatus}</span>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="space-y-2">
+                              {/* Current Status Display */}
+                              <div className="flex items-center gap-2">
+                                <span className={`${statusInfo.color} text-lg`}>
+                                  <StatusIcon />
+                                </span>
+                                <span className={`${statusInfo.color} text-sm font-medium`}>
+                                  {statusInfo.label}
+                                </span>
+                              </div>
+                              
+                              {/* Status Change Dropdown */}
+                              <div className="relative">
+                                <select
+                                  value={order.status}
+                                  onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                  disabled={updatingStatus === order._id}
+                                  className={`w-full px-3 py-2 rounded-lg ${statusInfo.bg} ${statusInfo.color} border border-amber-500/20 text-sm cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all`}
+                                >
+                                  <option value="pending" className="bg-yellow-900/20 text-yellow-400">
+                                    Pending
+                                  </option>
+                                  <option value="processing" className="bg-blue-900/20 text-blue-400">
+                                    Processing
+                                  </option>
+                                  <option value="preparing" className="bg-orange-900/20 text-orange-400">
+                                    Preparing
+                                  </option>
+                                  <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">
+                                    Out for Delivery
+                                  </option>
+                                  <option value="delivered" className="bg-green-900/20 text-green-400">
+                                    Delivered
+                                  </option>
+                                  <option value="cancelled" className="bg-red-900/20 text-red-400">
+                                    Cancelled
+                                  </option>
+                                </select>
+                                {updatingStatus === order._id && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+                                    <div className="text-amber-400 text-xs">Updating...</div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Delivery Information */}
+                              {order.expectedDelivery && (
+                                <div className="text-xs text-amber-400/80 bg-amber-900/10 px-2 py-1 rounded">
+                                  <FiCalendar className="inline mr-1" />
+                                  Expected: {order.expectedDelivery}
+                                </div>
+                              )}
+                              {order.deliveredAt && (
+                                <div className="text-xs text-green-400/80 bg-green-900/10 px-2 py-1 rounded">
+                                  <FiCalendar className="inline mr-1" />
+                                  Delivered: {order.deliveredAt}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => openOrderDetails(order)}
+                                className="p-2 text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 rounded-lg transition-colors"
+                                title="View Details"
+                              >
+                                <FiEye />
+                              </button>
+                              {(order.status === 'delivered' || order.status === 'cancelled') && (
+                                <button
+                                  onClick={() => handleDeleteOrder(order._id)}
+                                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+                                  title="Delete Order"
+                                >
+                                  <FiX />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Order Details Modal */}
+        {showModal && selectedOrder && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-[#4b3b3b] rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-amber-300">
+                  Order Details - #{selectedOrder._id.slice(-8)}
+                </h3>
+                <button
+                  onClick={closeModal}
+                  className="text-amber-400 hover:text-amber-300 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Customer Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-amber-300 flex items-center gap-2">
+                    <FiUser /> Customer Information
+                  </h4>
+                  <div className="bg-[#3a2b2b]/50 p-4 rounded-lg space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FiUser className="text-amber-400" />
+                      <span className="text-amber-100 font-medium">
+                        {selectedOrder.firstName} {selectedOrder.lastName}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FiMail className="text-amber-400" />
+                      <span className="text-amber-100">{selectedOrder.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FiPhone className="text-amber-400" />
+                      <span className="text-amber-100">{selectedOrder.phone}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <FiMapPin className="text-amber-400 mt-1" />
+                      <div className="text-amber-100">
+                        <div className="font-medium">Delivery Address:</div>
+                        <div>{selectedOrder.address}</div>
+                        <div>{selectedOrder.city} - {selectedOrder.zipCode}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-amber-300 flex items-center gap-2">
+                    <FiBox /> Order Information
+                  </h4>
+                  <div className="bg-[#3a2b2b]/50 p-4 rounded-lg space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-amber-400">Order ID:</span>
+                      <span className="text-amber-100 font-mono">#{selectedOrder._id.slice(-8)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-400">Order Date:</span>
+                      <span className="text-amber-100">{selectedOrder.createdAt}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-400">Current Status:</span>
+                      <span className={`${statusConfig[selectedOrder.status]?.color} font-medium`}>
+                        {statusConfig[selectedOrder.status]?.label}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-400">Payment Method:</span>
+                      <span className="text-amber-100">
+                        {paymentConfig[selectedOrder.paymentMethod?.toLowerCase()]?.label || 'Online Payment'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-amber-400">Payment Status:</span>
+                      <span className={`${statusConfig[selectedOrder.paymentStatus]?.color || 'text-amber-400'}`}>
+                        {selectedOrder.paymentStatus || 'Pending'}
+                      </span>
+                    </div>
+                    {selectedOrder.expectedDelivery && (
+                      <div className="flex justify-between">
+                        <span className="text-amber-400">Expected Delivery:</span>
+                        <span className="text-amber-100">{selectedOrder.expectedDelivery}</span>
+                      </div>
+                    )}
+                    {selectedOrder.deliveredAt && (
+                      <div className="flex justify-between">
+                        <span className="text-amber-400">Delivered At:</span>
+                        <span className="text-amber-100">{selectedOrder.deliveredAt}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-amber-300 mb-4 flex items-center gap-2">
+                  <FiShoppingBag /> Order Items ({selectedOrder.items.length})
+                </h4>
+                <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+                  {selectedOrder.items.map((item, index) => (
+                    <div key={index} className="bg-[#3a2b2b]/50 p-4 rounded-lg flex items-center gap-4 hover:bg-[#3a2b2b]/70 transition-colors border border-amber-500/10">
+                      <div className="relative">
+                        <img
+                          src={item.item.imageUrl ? 
+                            (item.item.imageUrl.startsWith('http') ? 
+                              item.item.imageUrl : 
+                              `http://localhost:4000${item.item.imageUrl}`) : 
+                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMyYTJhMmEiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjM2EzYTNhIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMiIgcng9IjgiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMjAiIGZpbGw9IiM2NjYiLz48cGF0aCBkPSJNNjAgMTQwIEwxMDAgMTAwIEwxNDAgMTQwIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHRleHQgeD0iMTAwIiB5PSIxNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+"
+                          }
+                          alt={item.item.name}
+                          className="w-16 h-16 object-cover rounded-lg border border-amber-500/20"
+                          onError={(e) => {
+                            console.log('Modal image failed to load:', e.target.src);
+                            e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMyYTJhMmEiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjM2EzYTNhIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMiIgcng9IjgiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMjAiIGZpbGw9IiM2NjYiLz48cGF0aCBkPSJNNjAgMTQwIEwxMDAgMTAwIEwxNDAgMTQwIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHRleHQgeD0iMTAwIiB5PSIxNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+";
+                          }}
+                        />
+                        <div className="absolute -top-2 -right-2 bg-amber-500 text-black text-sm font-bold rounded-full w-6 h-6 flex items-center justify-center border-2 border-[#2a1e14]">
+                          {item.quantity}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="text-amber-100 font-medium text-lg">{item.item.name}</h5>
+                        <div className="flex items-center gap-4 text-sm text-amber-400/80 mt-1">
+                          <span className="bg-amber-900/20 px-2 py-1 rounded">₹{item.item.price.toFixed(2)}</span>
+                          <span className="text-amber-300">×</span>
+                          <span className="bg-blue-900/20 px-2 py-1 rounded">{item.quantity}</span>
+                          <span className="text-amber-300">=</span>
+                          <span className="text-amber-200 font-bold text-base">
+                            ₹{(item.item.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div className="mt-6 bg-[#3a2b2b]/50 p-4 rounded-lg">
+                <h4 className="text-lg font-semibold text-amber-300 mb-4">Order Summary</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-amber-400">Subtotal:</span>
+                    <span className="text-amber-100">₹{selectedOrder.subtotal?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-amber-400">Tax:</span>
+                    <span className="text-amber-100">₹{selectedOrder.tax?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-amber-400">Shipping:</span>
+                    <span className="text-amber-100">₹{selectedOrder.shipping?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-amber-500/20 pt-2">
+                    <span className="text-amber-300 font-semibold">Total:</span>
+                    <span className="text-amber-200">₹{selectedOrder.total?.toFixed(2) || '0.00'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Update */}
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-amber-300 mb-4">Update Order Status</h4>
+                <div className="bg-[#3a2b2b]/50 p-4 rounded-lg">
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-amber-400">Current Status:</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`${statusConfig[selectedOrder.status]?.color} text-lg`}>
+                        {React.createElement(statusConfig[selectedOrder.status]?.icon)}
+                      </span>
+                      <span className={`${statusConfig[selectedOrder.status]?.color} font-medium`}>
+                        {statusConfig[selectedOrder.status]?.label}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <label className="block text-amber-400 text-sm font-medium">
+                      Change Status To:
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedOrder.status}
+                        onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
+                        disabled={updatingStatus === selectedOrder._id}
+                        className="w-full px-4 py-3 bg-[#2a1e14]/50 border border-amber-500/20 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50 transition-all"
+                      >
+                        <option value="pending" className="bg-yellow-900/20 text-yellow-400">
+                          🟡 Pending - Order received, awaiting processing
+                        </option>
+                        <option value="processing" className="bg-blue-900/20 text-blue-400">
+                          🔵 Processing - Order being prepared
+                        </option>
+                        <option value="preparing" className="bg-orange-900/20 text-orange-400">
+                          🟠 Preparing - Food being cooked
+                        </option>
+                        <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">
+                          🟣 Out for Delivery - Order dispatched
+                        </option>
+                        <option value="delivered" className="bg-green-900/20 text-green-400">
+                          🟢 Delivered - Order completed
+                        </option>
+                        <option value="cancelled" className="bg-red-900/20 text-red-400">
+                          🔴 Cancelled - Order cancelled
+                        </option>
+                      </select>
+                      {updatingStatus === selectedOrder._id && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                          <div className="text-amber-400 text-sm">Updating status...</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-amber-400/60 bg-amber-900/10 p-2 rounded">
+                      💡 <strong>Customer Notification:</strong> When you change the status, the customer will automatically see the update in their order history page.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
