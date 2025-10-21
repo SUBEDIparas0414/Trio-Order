@@ -7,6 +7,7 @@ import Navbar from './components/Navbar'
 import AdminLogin from './components/AdminLogin'
 import AdminSignup from './components/AdminSignup'
 import AdminPrivateRoute from './components/AdminPrivateRoute'
+import ManageSpecialOffers from './components/ManageSpecialOffers'
 
 
 const App = () => {
@@ -25,6 +26,12 @@ const App = () => {
         <AdminPrivateRoute>
           <Navbar />
           <List />
+        </AdminPrivateRoute>
+      } />
+      <Route path='/special-offers' element={
+        <AdminPrivateRoute>
+          <Navbar />
+          <ManageSpecialOffers />
         </AdminPrivateRoute>
       } />
       <Route path='/orders' element={

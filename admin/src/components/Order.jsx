@@ -19,6 +19,7 @@ import {
   FiAlertCircle,
   FiLoader
 } from 'react-icons/fi';
+import { useNotification, NotificationContainer } from './Notification';
 
 const Order = () => {
   // State management
@@ -31,6 +32,9 @@ const Order = () => {
   const [showModal, setShowModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Notification system
+  const { notifications, hideNotification, showSuccess, showError } = useNotification();
 
   // Status configuration
   const statusConfig = {
@@ -241,14 +245,22 @@ const Order = () => {
           cancelled: 'Cancelled'
         };
         
-        alert(`✅ Order status updated successfully!\n\nOrder #${orderId.slice(-8)} is now: ${statusLabels[newStatus]}\n\nThe customer will see this update in their order history.`);
+        showSuccess(
+          'Order Status Updated!',
+          `Order #${orderId.slice(-8)} is now: ${statusLabels[newStatus]}`,
+          'The customer will see this update in their order history.'
+        );
         
       } else {
         throw new Error(response.data.message || 'Failed to update order status');
       }
     } catch (err) {
       console.error('Error updating status:', err);
-      alert(`❌ Failed to update order status!\n\nError: ${err.response?.data?.message || err.message}\n\nPlease try again.`);
+      showError(
+        'Failed to Update Order Status',
+        err.response?.data?.message || err.message,
+        'Please try again or contact support if the issue persists.'
+      );
     } finally {
       setUpdatingStatus(null);
     }
@@ -886,6 +898,12 @@ const Order = () => {
           </div>
         )}
       </div>
+      
+      {/* Notification Container */}
+      <NotificationContainer 
+        notifications={notifications} 
+        onHide={hideNotification} 
+      />
     </div>
   );
 };

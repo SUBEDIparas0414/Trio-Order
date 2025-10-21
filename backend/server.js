@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import itemRouter from "./routes/itemRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
+import specialOfferRouter from "./routes/specialOfferRoute.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -42,6 +43,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/items", itemRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter); // fixed missing "/"
+app.use("/api/special-offers", specialOfferRouter);
 
 app.get("/", (req, res) => {
   res.send("API working");

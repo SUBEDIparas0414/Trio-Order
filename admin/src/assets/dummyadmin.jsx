@@ -1,13 +1,14 @@
 import {
     FiPlusCircle,
     FiList,
-    FiPackage,FiTruck, FiCheckCircle, FiClock, FiX,
+    FiPackage,FiTruck, FiCheckCircle, FiClock, FiX, FiTag,
 } from 'react-icons/fi';
 
 
 export const navLinks = [
     { name: 'Add Items', href: '/', icon: <FiPlusCircle /> },
     { name: 'List Items', href: '/list', icon: <FiList /> },
+    { name: 'Special Offers', href: '/special-offers', icon: <FiTag /> },
     { name: 'Orders', href: '/orders', icon: <FiPackage /> },
 ];
 
