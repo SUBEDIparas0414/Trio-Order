@@ -9,6 +9,7 @@ import itemRouter from "./routes/itemRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import specialOfferRouter from "./routes/specialOfferRoute.js";
+import recommendationRouter from "./routes/recommendationRoute.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -44,6 +45,7 @@ app.use("/api/items", itemRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/orders", orderRouter); // fixed missing "/"
 app.use("/api/special-offers", specialOfferRouter);
+app.use("/api/recommendations", recommendationRouter);
 
 app.get("/", (req, res) => {
   res.send("API working");

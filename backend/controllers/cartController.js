@@ -4,6 +4,17 @@ import { CartItem } from "../models/cartModel.js";
 // Get cart
 export const getCart = asyncHandler(async (req, res) => {
   const items = await CartItem.find({ user: req.user._id }).populate("item");
+  
+  console.log('getCart found items:', items.length);
+  items.forEach((ci, idx) => {
+    console.log(`Item ${idx}:`, { 
+      _id: ci._id, 
+      itemPopulated: !!ci.item, 
+      itemId: ci.item?._id,
+      itemName: ci.item?.name,
+      quantity: ci.quantity 
+    });
+  });
 
   const formatted = items.map((ci) => ({
     _id: ci._id.toString(),
@@ -17,15 +28,23 @@ export const getCart = asyncHandler(async (req, res) => {
 // Add to cart
 export const addToCart = asyncHandler(async (req, res) => {
   const { itemId, quantity } = req.body;
-  if (!itemId || typeof quantity !== "number") {
+  console.log('addToCart received:', { itemId, quantity, type: typeof quantity, body: req.body });
+  
+  if (!itemId || (quantity === undefined || quantity === null)) {
     res.status(400);
     throw new Error("itemId and quantity are required");
+  }
+  
+  const qty = Number(quantity);
+  if (!Number.isFinite(qty) || qty < 1) {
+    res.status(400);
+    throw new Error("quantity must be a valid number >= 1");
   }
 
   let cartItem = await CartItem.findOne({ user: req.user._id, item: itemId });
 
   if (cartItem) {
-    cartItem.quantity = Math.max(1, cartItem.quantity + quantity);
+    cartItem.quantity = Math.max(1, cartItem.quantity + qty);
 
     if (cartItem.quantity < 1) {
       await cartItem.remove();
@@ -48,9 +67,17 @@ export const addToCart = asyncHandler(async (req, res) => {
   cartItem = await CartItem.create({
     user: req.user._id,
     item: itemId,
-    quantity,
+    quantity: qty,
   });
   await cartItem.populate("item");
+
+  console.log('Created cart item:', {
+    _id: cartItem._id,
+    itemPopulated: !!cartItem.item,
+    itemName: cartItem.item?.name,
+    itemPrice: cartItem.item?.price,
+    quantity: cartItem.quantity
+  });
 
   res.status(201).json({
     _id: cartItem._id.toString(),
