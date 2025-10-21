@@ -11,6 +11,8 @@ import AdminForgotPassword from './components/AdminForgotPassword'
 import AdminPendingApproval from './components/AdminPendingApproval'
 import AdminPrivateRoute from './components/AdminPrivateRoute'
 import ManageSpecialOffers from './components/ManageSpecialOffers'
+import UserManagement from './components/UserManagement'
+import ContactQueries from './components/ContactQueries'
 
 
 const App = () => {
@@ -49,6 +51,18 @@ const App = () => {
           <Order />
         </AdminPrivateRoute>
       } />
+        <Route path='/users' element={
+          <AdminPrivateRoute>
+            <Navbar />
+            <UserManagement />
+          </AdminPrivateRoute>
+        } />
+        <Route path='/contact-queries' element={
+          <AdminPrivateRoute>
+            <Navbar />
+            <ContactQueries />
+          </AdminPrivateRoute>
+        } />
     </Routes>
     </>
   )

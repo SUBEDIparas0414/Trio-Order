@@ -17,8 +17,12 @@ const adminAuthMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log('Token decoded successfully for user:', decoded.email);
     
-    // For now, we'll allow any authenticated user to access admin routes
-    // In production, you should add role-based access control
+    // Check if this is an admin token (has role: 'admin')
+    if (decoded.role !== 'admin') {
+      console.log('Token is not an admin token, role:', decoded.role);
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+    
     req.admin = { _id: decoded.id, email: decoded.email };
     next();
   } catch (err) {

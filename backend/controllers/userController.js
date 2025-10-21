@@ -29,11 +29,25 @@ const loginUser = async (req, res) => {
       });
     }
 
+    // Check if user account is active
+    if (!user.isActive) {
+      return res.json({ 
+        success: false, 
+        message: "Your account has been deactivated. Please contact administrator for assistance.",
+        accountDeactivated: true
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.json({ success: false, message: "Invalid password" });
     }
+
+    // Update user's last active time
+    user.lastActive = new Date();
+    user.isActive = true;
+    await user.save();
 
     const token = createToken(user._id, user.email);
     res.json({ 
@@ -42,7 +56,8 @@ const loginUser = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        profilePhoto: user.profilePhoto
       }
     });
   } catch (error) {
@@ -353,6 +368,133 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Get all users for admin panel
+const getAllUsers = async (req, res) => {
+  try {
+    console.log('Getting all users for admin panel...');
+    
+    const users = await userModel.find({}, {
+      username: 1,
+      email: 1,
+      phone: 1,
+      isVerified: 1,
+      lastActive: 1,
+      isActive: 1,
+      createdAt: 1
+    }).sort({ createdAt: -1 });
+
+    console.log(`Found ${users.length} users in database`);
+
+    // Calculate active status based on lastActive (consider active if last active within 30 minutes)
+    const usersWithStatus = users.map(user => {
+      const now = new Date();
+      const lastActiveTime = new Date(user.lastActive);
+      const timeDiff = now - lastActiveTime;
+      const isCurrentlyActive = timeDiff <= 30 * 60 * 1000; // 30 minutes in milliseconds
+
+      return {
+        ...user.toObject(),
+        isCurrentlyActive
+      };
+    });
+
+    console.log(`Returning ${usersWithStatus.length} users with status`);
+
+    res.json({ 
+      success: true, 
+      users: usersWithStatus,
+      totalUsers: usersWithStatus.length,
+      activeUsers: usersWithStatus.filter(user => user.isCurrentlyActive).length
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({ success: false, message: "Failed to fetch users" });
+  }
+};
+
+// Update user active status (called when user logs in)
+const updateUserActivity = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    await userModel.findByIdAndUpdate(userId, {
+      lastActive: new Date(),
+      isActive: true
+    });
+
+    res.json({ success: true, message: "User activity updated" });
+  } catch (error) {
+    console.error('Update user activity error:', error);
+    res.status(500).json({ success: false, message: "Failed to update user activity" });
+  }
+};
+
+// Toggle user active status (admin can activate/deactivate users)
+const toggleUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    res.json({ 
+      success: true, 
+      message: `User ${user.isActive ? 'activated' : 'deactivated'} successfully`,
+      isActive: user.isActive
+    });
+  } catch (error) {
+    console.error('Toggle user status error:', error);
+    res.status(500).json({ success: false, message: "Failed to toggle user status" });
+  }
+};
+
+// Update profile photo
+const updateProfilePhoto = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No profile photo uploaded' 
+      });
+    }
+
+    const profilePhotoUrl = `/uploads/${req.file.filename}`;
+    
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { profilePhoto: profilePhotoUrl },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      profilePhoto: profilePhotoUrl
+    });
+
+  } catch (error) {
+    console.error('Error updating profile photo:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update profile photo' 
+    });
+  }
+};
+
 export { 
   loginUser, 
   registerUser, 
@@ -360,5 +502,9 @@ export {
   resendVerificationPin,
   requestPasswordReset,
   verifyResetPin,
-  resetPassword
+  resetPassword,
+  getAllUsers,
+  updateUserActivity,
+  toggleUserStatus,
+  updateProfilePhoto
 };

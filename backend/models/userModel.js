@@ -10,6 +10,14 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  phone: {
+    type: String,
+    default: null
+  },
+  profilePhoto: {
+    type: String,
+    default: null
+  },
   password: {
     type: String,
     required: true
@@ -33,6 +41,14 @@ const userSchema = new mongoose.Schema({
   resetPinExpires: {
     type: Date,
     default: null
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   },
   createdAt: {
     type: Date,

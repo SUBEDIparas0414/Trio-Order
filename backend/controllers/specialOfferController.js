@@ -23,14 +23,25 @@ export const createSpecialOffer = async (req, res, next) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    // Validate prices
+    // Validate prices - Allow small discounts (minimum 1% discount)
     if (discountedPrice >= originalPrice) {
-      return res.status(400).json({ message: 'Discounted price must be less than original price' });
+      return res.status(400).json({ 
+        message: 'Discounted price must be less than original price. Please provide a valid discount.' 
+      });
+    }
+
+    // Check if discount is too small (less than 1%)
+    const discountAmount = originalPrice - discountedPrice;
+    const calculatedDiscountPercentage = (discountAmount / originalPrice) * 100;
+    
+    if (calculatedDiscountPercentage < 1) {
+      return res.status(400).json({ 
+        message: 'Discount must be at least 1%. Please provide a meaningful discount.' 
+      });
     }
 
     // Calculate discount percentage if not provided
-    const calculatedDiscount = Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
-    const finalDiscountPercentage = discountPercentage || calculatedDiscount;
+    const finalDiscountPercentage = discountPercentage || Math.round(calculatedDiscountPercentage);
 
     const imageUrl = req.file ? `/uploads/${req.file.filename}` : '';
 
@@ -175,10 +186,22 @@ export const updateSpecialOffer = async (req, res, next) => {
       updateData.imageUrl = `/uploads/${req.file.filename}`;
     }
 
-    // Validate prices if both are provided
+    // Validate prices if both are provided - Allow small discounts (minimum 1% discount)
     if (updateData.originalPrice && updateData.discountedPrice) {
       if (updateData.discountedPrice >= updateData.originalPrice) {
-        return res.status(400).json({ message: 'Discounted price must be less than original price' });
+        return res.status(400).json({ 
+          message: 'Discounted price must be less than original price. Please provide a valid discount.' 
+        });
+      }
+
+      // Check if discount is too small (less than 1%)
+      const discountAmount = updateData.originalPrice - updateData.discountedPrice;
+      const calculatedDiscountPercentage = (discountAmount / updateData.originalPrice) * 100;
+      
+      if (calculatedDiscountPercentage < 1) {
+        return res.status(400).json({ 
+          message: 'Discount must be at least 1%. Please provide a meaningful discount.' 
+        });
       }
     }
 
