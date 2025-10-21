@@ -74,3 +74,4 @@ specialOfferSchema.virtual('savingsAmount').get(function() {
 specialOfferSchema.set('toJSON', { virtuals: true });
 
 export default mongoose.models.SpecialOffer || mongoose.model('SpecialOffer', specialOfferSchema);
+

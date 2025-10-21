@@ -4,6 +4,7 @@ import { FiUpload, FiEdit, FiTrash2, FiToggleLeft, FiToggleRight, FiTag, FiCalen
 import { FaRupeeSign } from 'react-icons/fa';
 import axios from 'axios';
 import { useNotification, NotificationContainer } from './Notification';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ManageSpecialOffers = () => {
   const [formData, setFormData] = useState({
@@ -244,53 +245,91 @@ const ManageSpecialOffers = () => {
   }
 
   return (
-    <div className={styles.pageWrapper}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] py-8 px-4 sm:px-6 lg:px-8"
+    >
       <div className="max-w-7xl mx-auto">
-        <div className={styles.cardContainer}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="card-glass"
+        >
           <div className="flex justify-between items-center mb-8">
-            <h2 className={styles.title}>Manage Special Offers</h2>
-            <button
+            <motion.h2 
+              initial={{ x: -30, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-h2 font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent"
+            >
+              Manage Special Offers
+            </motion.h2>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 console.log('Add Special Offer button clicked');
                 setShowForm(true);
               }}
-              className="bg-amber-500 hover:bg-amber-400 text-black px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
+              className="btn-primary flex items-center gap-2"
             >
-              <FiTag />
+              <FiTag className="text-lg" />
               Add Special Offer
-            </button>
+            </motion.button>
           </div>
 
           {/* Form Modal */}
-          {showForm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-[#4b3b3b] rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-2xl font-bold text-amber-400">
-                    {editingOffer ? 'Edit Special Offer' : 'Add New Special Offer'}
-                  </h3>
-                  <button
-                    onClick={resetForm}
-                    className="text-amber-400 hover:text-amber-300 text-2xl"
-                  >
-                    ×
-                  </button>
-                </div>
+          <AnimatePresence>
+            {showForm && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              >
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="card-glass w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                >
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-h3 font-bold text-[#F5F5F5]">
+                      {editingOffer ? 'Edit Special Offer' : 'Add New Special Offer'}
+                    </h3>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={resetForm}
+                      className="text-[#B3B3B3] hover:text-white text-2xl p-2 rounded-lg hover:bg-white/5 transition-all"
+                    >
+                      ×
+                    </motion.button>
+                  </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Image Upload */}
-                  <div className={styles.uploadWrapper}>
-                    <label className={`${styles.uploadLabel} cursor-pointer border-2 border-dashed border-amber-400 rounded-xl p-6 flex justify-center items-center bg-[#3a2b2b]/30 hover:bg-[#3a2b2b]/60 transition`}>
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex justify-center"
+                  >
+                    <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-xs h-48">
                       {formData.preview ? (
                         <img
                           src={formData.preview}
                           alt="Preview"
-                          className="max-h-48 rounded-lg shadow-md object-cover"
+                          className="max-h-full rounded-lg shadow-md object-cover"
                         />
                       ) : (
                         <div className="flex flex-col items-center text-center">
-                          <FiUpload className="text-4xl text-amber-400 mb-3" />
-                          <p className="text-amber-300 text-sm">
+                          <FiUpload className="text-4xl text-[#FF4C29] mb-3" />
+                          <p className="text-[#B3B3B3] text-sm">
                             Click to upload offer image
                           </p>
                         </div>
@@ -302,43 +341,55 @@ const ManageSpecialOffers = () => {
                         className="hidden"
                       />
                     </label>
-                  </div>
+                  </motion.div>
 
                   {/* Title */}
-                  <div>
-                    <label className="block text-amber-300 mb-2">Title</label>
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <label className="block text-[#B3B3B3] mb-2 font-medium">Title</label>
                     <input
                       type="text"
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      className={styles.inputField}
+                      className="input"
                       placeholder="e.g., Weekend Special - 30% Off"
                       required
                     />
-                  </div>
+                  </motion.div>
 
                   {/* Description */}
-                  <div>
-                    <label className="block text-amber-300 mb-2">Description</label>
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <label className="block text-[#B3B3B3] mb-2 font-medium">Description</label>
                     <textarea
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      className={`${styles.inputField} h-24 resize-none`}
+                      className="input h-24 resize-none"
                       placeholder="Describe the special offer..."
                       required
                     />
-                  </div>
+                  </motion.div>
 
                   {/* Item Selection */}
-                  <div>
-                    <label className="block text-amber-300 mb-2">Select Item</label>
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <label className="block text-[#B3B3B3] mb-2 font-medium">Select Item</label>
                     <select
                       name="itemId"
                       value={formData.itemId}
                       onChange={handleInputChange}
-                      className={styles.inputField}
+                      className="input"
                       required
                     >
                       <option value="">Choose an item...</option>
@@ -348,189 +399,241 @@ const ManageSpecialOffers = () => {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </motion.div>
 
                   {/* Price Fields */}
-                  <div className={styles.gridTwoCols}>
-                    <div>
-                      <label className="block text-amber-300 mb-2">Original Price</label>
-                      <div className={styles.relativeInput}>
-                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                    >
+                      <label className="block text-[#B3B3B3] mb-2 font-medium">Original Price</label>
+                      <div className="relative">
+                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
                         <input
                           type="number"
                           name="originalPrice"
                           value={formData.originalPrice}
                           onChange={handleInputChange}
-                          className={`${styles.inputField} pl-10`}
+                          className="input"
                           placeholder="0.00"
+                          style={{ paddingLeft: '2.5rem' }}
                           min="0"
                           step="0.01"
                           required
                         />
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-amber-300 mb-2">Discounted Price</label>
-                      <div className={styles.relativeInput}>
-                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+                    </motion.div>
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.55 }}
+                    >
+                      <label className="block text-[#B3B3B3] mb-2 font-medium">Discounted Price</label>
+                      <div className="relative">
+                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
                         <input
                           type="number"
                           name="discountedPrice"
                           value={formData.discountedPrice}
                           onChange={handleInputChange}
-                          className={`${styles.inputField} pl-10`}
+                          className="input"
                           placeholder="0.00"
+                          style={{ paddingLeft: '2.5rem' }}
                           min="0"
                           step="0.01"
                           required
                         />
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
 
                   {/* Discount Percentage */}
-                  <div>
-                    <label className="block text-amber-300 mb-2">Discount Percentage</label>
-                    <div className={styles.relativeInput}>
-                      <FiPercent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <label className="block text-[#B3B3B3] mb-2 font-medium">Discount Percentage</label>
+                    <div className="relative">
                       <input
                         type="number"
                         name="discountPercentage"
                         value={formData.discountPercentage}
                         onChange={handleInputChange}
-                        className={`${styles.inputField} pr-10`}
+                        className="input"
                         placeholder="0"
+                        style={{ paddingRight: '2.5rem' }}
                         min="0"
                         max="100"
                         required
                       />
+                      <FiPercent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
                     </div>
-                  </div>
+                  </motion.div>
 
                   {/* Valid Until */}
-                  <div>
-                    <label className="block text-amber-300 mb-2">Valid Until</label>
-                    <div className={styles.relativeInput}>
-                      <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.65 }}
+                  >
+                    <label className="block text-[#B3B3B3] mb-2 font-medium">Valid Until</label>
+                    <div className="relative">
+                      <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
                       <input
                         type="date"
                         name="validUntil"
                         value={formData.validUntil}
                         onChange={handleInputChange}
-                        className={`${styles.inputField} pl-10`}
+                        className="input"
+                        style={{ paddingLeft: '2.5rem' }}
                         min={new Date().toISOString().split('T')[0]}
                         required
                       />
                     </div>
-                  </div>
+                  </motion.div>
 
                   {/* Priority and Tags */}
-                  <div className={styles.gridTwoCols}>
-                    <div>
-                      <label className="block text-amber-300 mb-2">Priority (0-10)</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <label className="block text-[#B3B3B3] mb-2 font-medium">Priority (0-10)</label>
                       <input
                         type="number"
                         name="priority"
                         value={formData.priority}
                         onChange={handleInputChange}
-                        className={styles.inputField}
+                        className="input"
+                        placeholder="0"
                         min="0"
                         max="10"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-amber-300 mb-2">Tags (comma separated)</label>
+                    </motion.div>
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.75 }}
+                    >
+                      <label className="block text-[#B3B3B3] mb-2 font-medium">Tags (comma separated)</label>
                       <input
                         type="text"
                         name="tags"
                         value={formData.tags}
                         onChange={handleInputChange}
-                        className={styles.inputField}
+                        className="input"
                         placeholder="limited-time, popular, new"
                       />
-                    </div>
+                    </motion.div>
                   </div>
 
                   {/* Submit Buttons */}
-                  <div className="flex gap-4 pt-4">
-                    <button
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="flex gap-4 pt-4"
+                  >
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="submit"
-                      className="flex-1 bg-amber-500 hover:bg-amber-400 text-black py-3 rounded-lg font-semibold transition-colors"
+                      className="btn-primary flex-1"
                     >
                       {editingOffer ? 'Update Offer' : 'Create Offer'}
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={resetForm}
-                      className="px-6 py-3 border border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-black rounded-lg transition-colors"
+                      className="btn-secondary"
                     >
                       Cancel
-                    </button>
-                  </div>
+                    </motion.button>
+                  </motion.div>
                 </form>
-              </div>
-            </div>
-          )}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Special Offers List */}
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
-              <thead className={styles.thead}>
+          <motion.div 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="overflow-x-auto"
+          >
+            <table className="w-full">
+              <thead className="bg-white/5 backdrop-blur-sm">
                 <tr>
-                  <th className={styles.th}>Image</th>
-                  <th className={styles.th}>Title</th>
-                  <th className={styles.th}>Item</th>
-                  <th className={styles.th}>Prices</th>
-                  <th className={styles.th}>Discount</th>
-                  <th className={styles.th}>Valid Until</th>
-                  <th className={styles.th}>Status</th>
-                  <th className={styles.thCenter}>Actions</th>
+                  <th className="p-4 text-left text-[#FFD369] font-semibold">Image</th>
+                  <th className="p-4 text-left text-[#FFD369] font-semibold">Title</th>
+                  <th className="p-4 text-left text-[#FFD369] font-semibold">Item</th>
+                  <th className="p-4 text-left text-[#FFD369] font-semibold">Prices</th>
+                  <th className="p-4 text-left text-[#FFD369] font-semibold">Discount</th>
+                  <th className="p-4 text-left text-[#FFD369] font-semibold">Valid Until</th>
+                  <th className="p-4 text-left text-[#FFD369] font-semibold">Status</th>
+                  <th className="p-4 text-center text-[#FFD369] font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {specialOffers.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className={styles.emptyState}>
+                    <td colSpan="8" className="text-center py-12 text-[#B3B3B3] text-xl">
                       No special offers found
                     </td>
                   </tr>
                 ) : (
-                  specialOffers.map(offer => (
-                    <tr key={offer._id} className={styles.tr}>
-                      <td className={styles.imgCell}>
+                  specialOffers.map((offer, index) => (
+                    <motion.tr 
+                      key={offer._id}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border-b border-white/10 hover:bg-white/5 transition-all duration-300"
+                    >
+                      <td className="p-4">
                         {offer.imageUrl ? (
                           <img
                             src={offer.imageUrl}
                             alt={offer.title}
-                            className="w-16 h-16 object-cover rounded-lg"
+                            className="w-16 h-16 object-cover rounded-lg shadow-md"
                           />
                         ) : (
-                          <div className="w-16 h-16 bg-[#3a2b2b] rounded-lg flex items-center justify-center">
-                            <FiTag className="text-amber-400" />
+                          <div className="w-16 h-16 bg-white/5 rounded-lg flex items-center justify-center">
+                            <FiTag className="text-[#FF4C29]" />
                           </div>
                         )}
                       </td>
-                      <td className={styles.nameCell}>
-                        <div className={styles.nameText}>{offer.title}</div>
-                        <div className={styles.descText}>{offer.description}</div>
+                      <td className="p-4">
+                        <div className="text-[#F5F5F5] font-medium text-lg">{offer.title}</div>
+                        <div className="text-sm text-[#B3B3B3]">{offer.description}</div>
                       </td>
-                      <td className={styles.categoryCell}>
+                      <td className="p-4 text-[#B3B3B3]">
                         {offer.item?.name || 'N/A'}
                       </td>
-                      <td className={styles.priceCell}>
-                        <div className="text-amber-300">₹{offer.originalPrice}</div>
+                      <td className="p-4">
+                        <div className="text-[#F5F5F5]">₹{offer.originalPrice}</div>
                         <div className="text-green-400 font-semibold">₹{offer.discountedPrice}</div>
                       </td>
-                      <td className={styles.priceCell}>
+                      <td className="p-4">
                         <span className="text-red-400 font-semibold">{offer.discountPercentage}%</span>
                       </td>
-                      <td className={styles.categoryCell}>
-                        <div className={isExpired(offer.validUntil) ? 'text-red-400' : 'text-amber-300'}>
+                      <td className="p-4">
+                        <div className={isExpired(offer.validUntil) ? 'text-red-400' : 'text-[#F5F5F5]'}>
                           {formatDate(offer.validUntil)}
                         </div>
                       </td>
-                      <td className={styles.categoryCell}>
-                        <button
+                      <td className="p-4">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => handleToggleStatus(offer._id)}
                           className="flex items-center gap-2"
                         >
@@ -542,31 +645,35 @@ const ManageSpecialOffers = () => {
                           <span className={offer.isActive ? 'text-green-400' : 'text-gray-400'}>
                             {offer.isActive ? 'Active' : 'Inactive'}
                           </span>
-                        </button>
+                        </motion.button>
                       </td>
                       <td className="p-4">
                         <div className="flex gap-2 justify-center">
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                             onClick={() => handleEdit(offer)}
-                            className="text-amber-500 hover:text-amber-400 transition-colors p-2 rounded-lg hover:bg-amber-900/20"
+                            className="text-[#FFD369] hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5"
                           >
                             <FiEdit />
-                          </button>
-                          <button
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
                             onClick={() => handleDelete(offer._id)}
-                            className="text-red-500 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-red-900/20"
+                            className="text-red-400 hover:text-red-300 transition-colors p-2 rounded-lg hover:bg-red-500/10"
                           >
                             <FiTrash2 />
-                          </button>
+                          </motion.button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))
                 )}
               </tbody>
             </table>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
       
       {/* Notification Container */}
@@ -574,7 +681,7 @@ const ManageSpecialOffers = () => {
         notifications={notifications} 
         onHide={hideNotification} 
       />
-    </div>
+    </motion.div>
   );
 };
 

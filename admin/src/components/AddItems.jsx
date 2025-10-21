@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { styles } from '../assets/dummyadmin';
 import { FiHeart, FiStar, FiUpload } from 'react-icons/fi';
 import axios from 'axios'
 import { FaRupeeSign } from 'react-icons/fa'
+import { motion } from 'framer-motion';
+import { useNotification, NotificationContainer } from './Notification';
 
 const AddItems = () => {
   const [formData, setFormData] = useState({
@@ -22,6 +23,7 @@ const AddItems = () => {
   ]);
 
   const [hoverRating, setHoverRating] = useState(0);
+  const { notifications, hideNotification, showSuccess, showError } = useNotification();
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -51,7 +53,7 @@ const AddItems = () => {
         payload.append(key, val);
       });
 
-      await axios.post(//you should carefull here
+      await axios.post(
         'http://localhost:4000/api/items',
         payload,
         { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -69,33 +71,64 @@ const AddItems = () => {
         preview: ''
       });
 
+      showSuccess(
+        'Item Added Successfully!',
+        'New menu item has been created',
+        'The item is now visible to customers.'
+      );
+
     } catch (err) {
-      console.log('Error uploading item', err.response || err.message)
+      console.log('Error uploading item', err.response || err.message);
+      showError(
+        'Failed to Add Item',
+        err.response?.data?.message || err.message,
+        'Please check your input and try again.'
+      );
     }
   };
 
   return (
-    <div className={`${styles.formWrapper} bg-gradient-to-b from-[#1f1c2c] to-[#3a2b2b] min-h-screen flex items-center justify-center px-4`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] flex items-center justify-center px-4 py-8"
+    >
       <div className="w-full max-w-2xl">
-        <div className={`${styles.formCard} bg-[#2a2323] shadow-xl rounded-2xl p-6 sm:p-10`}>
-          <h2 className={`${styles.formTitle} text-center text-2xl sm:text-3xl font-bold text-amber-400`}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="card-glass"
+        >
+          <motion.h2 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-center text-h2 font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent mb-8"
+          >
             Add New Menu Item
-          </h2>
+          </motion.h2>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Image Upload */}
-            <div className={styles.uploadWrapper}>
-              <label className={`${styles.uploadLabel} cursor-pointer border-2 border-dashed border-amber-400 rounded-xl p-6 flex justify-center items-center bg-[#3a2b2b]/30 hover:bg-[#3a2b2b]/60 transition`}>
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="flex justify-center"
+            >
+              <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-xs h-48">
                 {formData.preview ? (
                   <img
                     src={formData.preview}
                     alt="Preview"
-                    className={`${styles.previewImage} max-h-48 rounded-lg shadow-md object-cover`}
+                    className="max-h-full rounded-lg shadow-md object-cover"
                   />
                 ) : (
                   <div className="flex flex-col items-center text-center">
-                    <FiUpload className={`${styles.uploadIcon} text-4xl sm:text-5xl text-amber-400 mb-3`} />
-                    <p className={`${styles.uploadText} text-amber-300 text-sm sm:text-base`}>
+                    <FiUpload className="text-4xl text-[#FF4C29] mb-3" />
+                    <p className="text-[#B3B3B3] text-sm">
                       Click to upload product image
                     </p>
                   </div>
@@ -108,146 +141,176 @@ const AddItems = () => {
                   required
                 />
               </label>
-            </div>
+            </motion.div>
 
-            <div className="space-y-6">
-              {/* Product Name */}
-              <div>
-                <label className="block mb-2 text-base sm:text-lg text-amber-400">
-                  Product Name
-                </label>
+            {/* Product Name */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <label className="block text-[#B3B3B3] mb-2 font-medium">Product Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="input"
+                placeholder="Enter Product Name"
+                required
+              />
+            </motion.div>
+
+            {/* Description */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <label className="block text-[#B3B3B3] mb-2 font-medium">Description</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Enter product description"
+                className="input h-32 resize-none"
+                required
+              />
+            </motion.div>
+
+            {/* Category */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <label className="block text-[#B3B3B3] mb-2 font-medium">Category</label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                className="input"
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map(c => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </motion.div>
+
+            {/* Price */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <label className="block text-[#B3B3B3] mb-2 font-medium">Price (₹)</label>
+              <div className="relative">
+                <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
                 <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
+                  type="number"
+                  name="price"
+                  value={formData.price}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded-lg bg-[#3a2b2b] border border-amber-400 text-amber-100 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="Enter Product Name"
+                  className="input"
+                  placeholder="Enter Price"
+                  style={{ paddingLeft: '2.5rem' }}
+                  min="0"
+                  step="0.01"
                   required
                 />
               </div>
+            </motion.div>
 
-              {/* Description */}
+            {/* Rating & Popularity */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+            >
+              {/* Rating */}
               <div>
-                <label className="block mb-2 text-base sm:text-lg text-amber-400">
-                  Description
+                <label className="block mb-2 text-[#B3B3B3] font-medium">
+                  Rating
                 </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Enter product description"
-                  className="w-full px-4 py-2 rounded-lg bg-[#3a2b2b] border border-amber-400 text-amber-100 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 h-32 sm:h-40"
-                  required
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <label className="block mb-2 text-base sm:text-lg text-amber-400">
-                  Category
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded-lg bg-[#3a2b2b] border border-amber-400 text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(c => (
-                    <option key={c} value={c} className="bg-[#3a2b2b]">
-                      {c}
-                    </option>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <motion.button
+                      key={star}
+                      type="button"
+                      onClick={() => handleRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="text-3xl transition-colors"
+                    >
+                      <FiStar
+                        className={
+                          star <= (hoverRating || formData.rating)
+                            ? 'text-[#FFD369] fill-current'
+                            : 'text-white/20'
+                        }
+                      />
+                    </motion.button>
                   ))}
-                </select>
+                </div>
               </div>
 
-              {/* Price */}
+              {/* Popularity */}
               <div>
-                <label className="block mb-2 text-base sm:text-lg text-amber-400">
-                  Price (₹)
+                <label className="block mb-2 text-[#B3B3B3] font-medium">
+                  Popularity
                 </label>
-                <div className="relative">
-                  <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+                <div className="flex items-center gap-4">
+                  <motion.button
+                    type="button"
+                    onClick={handleHearts}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-3xl text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    <FiHeart />
+                  </motion.button>
                   <input
                     type="number"
-                    name="price"
-                    value={formData.price}
+                    name="hearts"
+                    value={formData.hearts}
                     onChange={handleInputChange}
-                    className="w-full pl-10 sm:pl-12 px-4 py-2 rounded-lg bg-[#3a2b2b] border border-amber-400 text-amber-100 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="Enter Price"
+                    className="input w-32"
+                    placeholder="Likes"
                     min="0"
-                    step="0.01"
-                    required
                   />
                 </div>
               </div>
+            </motion.div>
 
-              {/* Rating & Popularity */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Rating */}
-                <div>
-                  <label className="block mb-2 text-base sm:text-lg text-amber-400">
-                    Rating
-                  </label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => handleRating(star)}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        className="text-2xl sm:text-3xl transition-transform hover:scale-110"
-                      >
-                        <FiStar
-                          className={
-                            star <= (hoverRating || formData.rating)
-                              ? 'text-amber-400 fill-current'
-                              : 'text-amber-100/30'
-                          }
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Popularity */}
-                <div>
-                  <label className="block mb-2 text-base sm:text-lg text-amber-400">
-                    Popularity
-                  </label>
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <button
-                      type="button"
-                      onClick={handleHearts}
-                      className="text-2xl sm:text-3xl text-amber-400 hover:text-amber-300 transition-colors animate-pulse"
-                    >
-                      <FiHeart />
-                    </button>
-                    <input
-                      type="number"
-                      name="hearts"
-                      value={formData.hearts}
-                      onChange={handleInputChange}
-                      className="w-24 px-4 py-2 rounded-lg bg-[#3a2b2b] border border-amber-400 text-amber-100 placeholder-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Likes"
-                      min="0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit */}
-              <button type="submit" className="w-full py-3 text-lg font-semibold rounded-xl shadow-lg bg-amber-500 hover:bg-amber-400 text-black transition">
-                Add To Menu
-              </button>
-            </div>
+            {/* Submit */}
+            <motion.button 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit" 
+              className="btn-primary w-full"
+            >
+              Add To Menu
+            </motion.button>
           </form>
-        </div>
+        </motion.div>
       </div>
-    </div>
+
+      {/* Notification Container */}
+      <NotificationContainer 
+        notifications={notifications} 
+        onHide={hideNotification} 
+      />
+    </motion.div>
   )
 }
 

@@ -3,6 +3,7 @@ import { GiChefToque } from "react-icons/gi";
 import { FiEye, FiEyeOff, FiLock, FiMail } from 'react-icons/fi';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
@@ -66,33 +67,56 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] flex items-center justify-center p-4">
-      <div className="bg-[#4b3b3b]/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-amber-500/20 w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="card-glass w-full max-w-md"
+      >
         {/* Header */}
-        <div className="text-center mb-8">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-center mb-8"
+        >
           <div className="flex items-center justify-center gap-3 mb-4">
-            <GiChefToque className="text-4xl text-amber-500" />
-            <span className="text-2xl font-bold text-amber-100">Admin Panel</span>
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <GiChefToque className="text-5xl text-[#FF4C29]" />
+            </motion.div>
+            <span className="text-3xl font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent">Admin Panel</span>
           </div>
-          <h2 className="text-xl text-amber-300">Sign in to manage orders</h2>
-        </div>
+          <h2 className="text-xl text-[#B3B3B3]">Sign in to manage orders</h2>
+        </motion.div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg backdrop-blur-sm"
+          >
             <p className="text-red-400 text-sm">{error}</p>
-          </div>
+          </motion.div>
         )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email Field */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-amber-300 mb-2">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <label htmlFor="email" className="block text-sm font-medium text-[#B3B3B3] mb-2">
               Email Address
             </label>
             <div className="relative">
-              <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+              <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
               <input
                 type="email"
                 id="email"
@@ -100,19 +124,24 @@ const AdminLogin = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-[#3a2b2b]/50 border border-amber-500/20 rounded-lg text-amber-100 placeholder-amber-400/60 focus:outline-none focus:border-amber-400 transition-colors"
+                className="input pl-10"
                 placeholder="Enter your email"
+                style={{ paddingLeft: '2.5rem' }}
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* Password Field */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-amber-300 mb-2">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <label htmlFor="password" className="block text-sm font-medium text-[#B3B3B3] mb-2">
               Password
             </label>
             <div className="relative">
-              <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400" />
+              <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
@@ -120,64 +149,87 @@ const AdminLogin = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full pl-10 pr-12 py-3 bg-[#3a2b2b]/50 border border-amber-500/20 rounded-lg text-amber-100 placeholder-amber-400/60 focus:outline-none focus:border-amber-400 transition-colors"
+                className="input"
                 placeholder="Enter your password"
+                style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
               />
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-400 hover:text-amber-300 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] hover:text-white transition-colors"
               >
                 {showPassword ? <FiEyeOff /> : <FiEye />}
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Remember Me */}
-          <div className="flex items-center">
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center"
+          >
             <input
               type="checkbox"
               id="rememberMe"
               name="rememberMe"
               checked={formData.rememberMe}
               onChange={handleChange}
-              className="w-4 h-4 text-amber-600 bg-[#3a2b2b]/50 border-amber-500/20 rounded focus:ring-amber-500 focus:ring-2"
+              className="w-4 h-4 text-[#FF4C29] bg-white/10 border-white/20 rounded focus:ring-[#FF4C29] focus:ring-2"
             />
-            <label htmlFor="rememberMe" className="ml-2 text-sm text-amber-300">
+            <label htmlFor="rememberMe" className="ml-2 text-sm text-[#B3B3B3]">
               Remember me
             </label>
-          </div>
+          </motion.div>
 
           {/* Submit Button */}
-          <button
+          <motion.button
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-lg font-bold text-lg transition-all hover:shadow-2xl hover:shadow-amber-500/30 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+          </motion.button>
         </form>
 
         {/* Login Link */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-amber-400/60">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-6 text-center"
+        >
+          <p className="text-sm text-[#B3B3B3]">
             Don't have an account?{' '}
             <button
               onClick={() => navigate('/admin-signup')}
-              className="text-amber-400 hover:text-amber-300 underline"
+              className="text-[#FF4C29] hover:text-[#FFD369] font-semibold transition-colors underline"
             >
               Create one here
             </button>
           </p>
-        </div>
+        </motion.div>
 
         {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-sm text-amber-400/60">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8 text-center"
+        >
+          <p className="text-sm text-[#B3B3B3]">
             Admin access only. Contact system administrator for credentials.
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
