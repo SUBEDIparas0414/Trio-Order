@@ -3,6 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import { connectDB } from "./config/db.js";
 import userRouter from "./routes/userRoutes.js";
+import adminRouter from "./routes/adminRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import itemRouter from "./routes/itemRoute.js";
@@ -40,10 +41,11 @@ connectDB();
 
 // Routes
 app.use("/api/user", userRouter);
+app.use("/api/admin", adminRouter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/items", itemRouter);
 app.use("/api/cart", cartRouter);
-app.use("/api/orders", orderRouter); // fixed missing "/"
+app.use("/api/orders", orderRouter);
 app.use("/api/special-offers", specialOfferRouter);
 app.use("/api/recommendations", recommendationRouter);
 

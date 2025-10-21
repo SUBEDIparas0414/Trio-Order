@@ -46,40 +46,35 @@ const AdminSignup = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:4000/api/user/register', {
+      const response = await axios.post('http://localhost:4000/api/admin/register', {
         username: formData.username,
         email: formData.email,
         password: formData.password
       });
 
-      if (response.data.success && response.data.token) {
-        // Store admin token
+      if (response.data.success && response.data.pendingApproval) {
+        // Redirect to pending approval page
+        navigate('/admin-pending-approval', { state: { message: response.data.message } });
+        return;
+      } else if (response.data.success && response.data.needsVerification) {
+        // Redirect to email verification page (owner already approved)
+        navigate('/admin-verify-email', { state: { email: response.data.email } });
+      } else if (response.data.success && response.data.token) {
+        // Auto login after verification
         localStorage.setItem('token', response.data.token);
-        
-        // Store admin info
-        const adminInfo = {
-          email: formData.email,
-          username: formData.username,
-          token: response.data.token,
-          isAdmin: true
-        };
-        localStorage.setItem('admin', JSON.stringify(adminInfo));
-
-        // Handle remember me
-        if (formData.rememberMe) {
-          localStorage.setItem('adminLoginData', JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-            rememberMe: true
-          }));
-        } else {
-          localStorage.removeItem('adminLoginData');
-        }
-
-        // Navigate to admin dashboard
+        localStorage.setItem('admin', JSON.stringify(response.data.admin));
         navigate('/');
+      } else if (!response.data.success && response.data.pendingApproval) {
+        // Already pending approval
+        setError(response.data.message);
+      } else if (!response.data.success && response.data.needsVerification) {
+        // Account exists but not verified
+        setError(response.data.message);
+        setTimeout(() => {
+          navigate('/admin-verify-email', { state: { email: response.data.email } });
+        }, 2000);
       } else {
-        setError('Registration failed. Please try again.');
+        setError(response.data.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
       console.error('Registration error:', err);

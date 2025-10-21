@@ -16,6 +16,13 @@ const Navbar = () => {
         navigate('/admin-login');
     };
 
+    const handleLogoClick = () => {
+        // Navigate to home page
+        navigate('/');
+        // Scroll to top smoothly
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const adminInfo = JSON.parse(localStorage.getItem('admin') || '{}');
 
   return (
@@ -32,7 +39,10 @@ const Navbar = () => {
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-3 cursor-pointer"
+              onClick={handleLogoClick}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               <div className="p-2 bg-gradient-to-br from-[#FF4C29] to-[#FF6B35] rounded-xl shadow-lg">
                 <GiChefToque className="text-2xl text-white" />

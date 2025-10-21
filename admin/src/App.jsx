@@ -6,6 +6,9 @@ import Order from './components/Order'
 import Navbar from './components/Navbar'
 import AdminLogin from './components/AdminLogin'
 import AdminSignup from './components/AdminSignup'
+import AdminVerifyEmail from './components/AdminVerifyEmail'
+import AdminForgotPassword from './components/AdminForgotPassword'
+import AdminPendingApproval from './components/AdminPendingApproval'
 import AdminPrivateRoute from './components/AdminPrivateRoute'
 import ManageSpecialOffers from './components/ManageSpecialOffers'
 
@@ -14,8 +17,14 @@ const App = () => {
   return (
     <>
     <Routes>
+      {/* Admin Authentication Routes */}
       <Route path='/admin-login' element={<AdminLogin />} />
       <Route path='/admin-signup' element={<AdminSignup />} />
+      <Route path='/admin-verify-email' element={<AdminVerifyEmail />} />
+      <Route path='/admin-forgot-password' element={<AdminForgotPassword />} />
+      <Route path='/admin-pending-approval' element={<AdminPendingApproval />} />
+      
+      {/* Protected Admin Routes */}
       <Route path='/' element={
         <AdminPrivateRoute>
           <Navbar />

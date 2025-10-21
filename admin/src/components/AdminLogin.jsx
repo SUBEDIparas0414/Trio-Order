@@ -30,7 +30,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:4000/api/user/login', {
+      const response = await axios.post('http://localhost:4000/api/admin/login', {
         email: formData.email,
         password: formData.password
       });
@@ -38,14 +38,7 @@ const AdminLogin = () => {
       if (response.data.success && response.data.token) {
         // Store admin token
         localStorage.setItem('token', response.data.token);
-        
-        // Store admin info
-        const adminInfo = {
-          email: formData.email,
-          token: response.data.token,
-          isAdmin: true
-        };
-        localStorage.setItem('admin', JSON.stringify(adminInfo));
+        localStorage.setItem('admin', JSON.stringify(response.data.admin));
 
         // Handle remember me
         if (formData.rememberMe) {
@@ -56,11 +49,30 @@ const AdminLogin = () => {
 
         // Navigate to admin dashboard
         navigate('/');
+      } else if (!response.data.success && response.data.pendingApproval) {
+        // Admin pending owner approval
+        setError(response.data.message);
+        setTimeout(() => {
+          navigate('/admin-pending-approval', { state: { message: response.data.message } });
+        }, 2000);
+      } else if (!response.data.success && response.data.needsVerification) {
+        // Admin needs to verify email first
+        setError(response.data.message);
+        setTimeout(() => {
+          navigate('/admin-verify-email', { state: { email: response.data.email || formData.email } });
+        }, 2000);
       } else {
-        setError('Invalid credentials');
+        setError(response.data.message || 'Invalid credentials');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      if (err.response?.data?.needsVerification) {
+        setError(err.response.data.message);
+        setTimeout(() => {
+          navigate('/admin-verify-email', { state: { email: err.response.data.email || formData.email } });
+        }, 2000);
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -165,24 +177,33 @@ const AdminLogin = () => {
             </div>
           </motion.div>
 
-          {/* Remember Me */}
+          {/* Remember Me & Forgot Password */}
           <motion.div 
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="flex items-center"
+            className="flex items-center justify-between"
           >
-            <input
-              type="checkbox"
-              id="rememberMe"
-              name="rememberMe"
-              checked={formData.rememberMe}
-              onChange={handleChange}
-              className="w-4 h-4 text-[#FF4C29] bg-white/10 border-white/20 rounded focus:ring-[#FF4C29] focus:ring-2"
-            />
-            <label htmlFor="rememberMe" className="ml-2 text-sm text-[#B3B3B3]">
-              Remember me
-            </label>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleChange}
+                className="w-4 h-4 text-[#FF4C29] bg-white/10 border-white/20 rounded focus:ring-[#FF4C29] focus:ring-2"
+              />
+              <label htmlFor="rememberMe" className="ml-2 text-sm text-[#B3B3B3]">
+                Remember me
+              </label>
+            </div>
+            <a
+              href="/admin-forgot-password"
+              className="text-sm text-[#FFD369] hover:text-[#FF4C29] transition-colors"
+              style={{ fontFamily: "'Lato', sans-serif" }}
+            >
+              Forgot Password?
+            </a>
           </motion.div>
 
           {/* Submit Button */}

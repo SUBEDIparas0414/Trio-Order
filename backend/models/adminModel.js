@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   username: {
     type: String,
     required: true
@@ -13,6 +13,19 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true
+  },
+  role: {
+    type: String,
+    default: 'admin',
+    enum: ['admin', 'superadmin']
+  },
+  isApprovedByOwner: {
+    type: Boolean,
+    default: false
+  },
+  approvalToken: {
+    type: String,
+    default: null
   },
   isVerified: {
     type: Boolean,
@@ -37,9 +50,14 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  lastLogin: {
+    type: Date,
+    default: null
   }
 });
 
-const userModel = mongoose.models.user || mongoose.model("user", userSchema);
+const adminModel = mongoose.models.admin || mongoose.model("admin", adminSchema);
 
-export default userModel;
+export default adminModel;
+
