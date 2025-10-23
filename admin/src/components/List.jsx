@@ -4,10 +4,14 @@ import { FiHeart, FiStar, FiTrash2 } from "react-icons/fi";
 import axios from "axios";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotification, NotificationContainer } from './Notification';
+import ConfirmationDialog from './ConfirmationDialog';
 
 const List = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { notifications, hideNotification, showSuccess, showError } = useNotification();
 
   useEffect(() => {
@@ -30,17 +34,26 @@ const List = () => {
   }, []);
 
   // delete items
-  const handleDelete = async (itemId) => {
-    if (!window.confirm("Are you sure you want to delete this item?")) return;
+  const handleDeleteClick = (itemId) => {
+    const item = items.find(i => i._id === itemId);
+    setItemToDelete(item);
+    setShowDeleteDialog(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!itemToDelete) return;
+    
+    setIsDeleting(true);
     try {
-      await axios.delete(`http://localhost:4000/api/items/${itemId}`);
-      setItems((prev) => prev.filter((item) => item._id !== itemId));
+      await axios.delete(`http://localhost:4000/api/items/${itemToDelete._id}`);
+      setItems((prev) => prev.filter((item) => item._id !== itemToDelete._id));
       showSuccess(
         'Item Deleted Successfully',
         'The menu item has been removed',
         'This item is no longer visible to customers.'
       );
+      setShowDeleteDialog(false);
+      setItemToDelete(null);
     } catch (err) {
       console.error("Error deleting item:", err);
       showError(
@@ -48,7 +61,14 @@ const List = () => {
         err.response?.data?.message || err.message,
         'Please try again or contact support if the issue persists.'
       );
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteDialog(false);
+    setItemToDelete(null);
   };
 
   const renderStars = (rating) =>
@@ -164,7 +184,7 @@ const List = () => {
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(item._id)}
+                          onClick={() => handleDeleteClick(item._id)}
                           className="text-red-400 hover:text-red-300 transition-colors p-2 rounded-lg hover:bg-red-500/10"
                         >
                           <FiTrash2 className="text-2xl" />
@@ -183,6 +203,19 @@ const List = () => {
       <NotificationContainer 
         notifications={notifications} 
         onHide={hideNotification} 
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Menu Item"
+        message={`Are you sure you want to delete "${itemToDelete?.name}"? This action cannot be undone and the item will be permanently removed from the menu.`}
+        confirmText="Delete Item"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isDeleting}
       />
     </motion.div>
   );

@@ -4,6 +4,7 @@ import { FiUpload, FiEdit, FiTrash2, FiToggleLeft, FiToggleRight, FiTag, FiCalen
 import { FaRupeeSign } from 'react-icons/fa';
 import axios from 'axios';
 import { useNotification, NotificationContainer } from './Notification';
+import ConfirmationDialog from './ConfirmationDialog';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ManageSpecialOffers = () => {
@@ -26,6 +27,9 @@ const ManageSpecialOffers = () => {
   const [loading, setLoading] = useState(true);
   const [editingOffer, setEditingOffer] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [offerToDelete, setOfferToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Notification system
   const { notifications, hideNotification, showSuccess, showError } = useNotification();
@@ -180,20 +184,29 @@ const ManageSpecialOffers = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (offerId) => {
-    if (!window.confirm('Are you sure you want to delete this special offer?')) return;
+  const handleDeleteClick = (offerId) => {
+    const offer = specialOffers.find(o => o._id === offerId);
+    setOfferToDelete(offer);
+    setShowDeleteDialog(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!offerToDelete) return;
+    
+    setIsDeleting(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:4000/api/special-offers/${offerId}`, {
+      await axios.delete(`http://localhost:4000/api/special-offers/${offerToDelete._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSpecialOffers(prev => prev.filter(offer => offer._id !== offerId));
+      setSpecialOffers(prev => prev.filter(offer => offer._id !== offerToDelete._id));
       showSuccess(
         'Special Offer Deleted',
         'The special offer has been removed successfully',
         'This offer is no longer visible to customers.'
       );
+      setShowDeleteDialog(false);
+      setOfferToDelete(null);
     } catch (err) {
       console.error('Error deleting special offer:', err);
       showError(
@@ -201,7 +214,14 @@ const ManageSpecialOffers = () => {
         err.response?.data?.message || err.message,
         'Please try again or contact support if the issue persists.'
       );
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteDialog(false);
+    setOfferToDelete(null);
   };
 
   const handleToggleStatus = async (offerId) => {
@@ -660,7 +680,7 @@ const ManageSpecialOffers = () => {
                           <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => handleDelete(offer._id)}
+                            onClick={() => handleDeleteClick(offer._id)}
                             className="text-red-400 hover:text-red-300 transition-colors p-2 rounded-lg hover:bg-red-500/10"
                           >
                             <FiTrash2 />
@@ -680,6 +700,19 @@ const ManageSpecialOffers = () => {
       <NotificationContainer 
         notifications={notifications} 
         onHide={hideNotification} 
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Special Offer"
+        message={`Are you sure you want to delete "${offerToDelete?.title}"? This action cannot be undone and the offer will be permanently removed.`}
+        confirmText="Delete Offer"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isDeleting}
       />
     </motion.div>
   );

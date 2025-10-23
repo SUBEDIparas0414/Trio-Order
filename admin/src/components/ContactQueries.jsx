@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiEye, FiEdit, FiTrash2, FiClock, FiCheckCircle, FiAlertCircle, FiStar } from 'react-icons/fi';
 import axios from 'axios';
+import ConfirmationDialog from './ConfirmationDialog';
 
 const ContactQueries = () => {
   const [queries, setQueries] = useState([]);
@@ -11,6 +12,9 @@ const ContactQueries = () => {
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState('all');
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [queryToDelete, setQueryToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
@@ -64,23 +68,39 @@ const ContactQueries = () => {
     }
   };
 
-  const deleteQuery = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this query?')) return;
+  const deleteQueryClick = (id) => {
+    const query = queries.find(q => q._id === id);
+    setQueryToDelete(query);
+    setShowDeleteDialog(true);
+  };
 
+  const deleteQueryConfirm = async () => {
+    if (!queryToDelete) return;
+    
+    setIsDeleting(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:4000/api/contact/${id}`, {
+      const response = await axios.delete(`http://localhost:4000/api/contact/${queryToDelete._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.success) {
         showToast('Query deleted successfully', 'success');
         fetchQueries();
+        setShowDeleteDialog(false);
+        setQueryToDelete(null);
       }
     } catch (error) {
       console.error('Error deleting query:', error);
       showToast('Failed to delete query', 'error');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const deleteQueryCancel = () => {
+    setShowDeleteDialog(false);
+    setQueryToDelete(null);
   };
 
   const getStatusColor = (status) => {
@@ -302,7 +322,7 @@ const ContactQueries = () => {
                         <FiEye />
                       </button>
                       <button
-                        onClick={() => deleteQuery(query._id)}
+                        onClick={() => deleteQueryClick(query._id)}
                         className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
                       >
                         <FiTrash2 />
@@ -410,6 +430,19 @@ const ContactQueries = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={deleteQueryCancel}
+        onConfirm={deleteQueryConfirm}
+        title="Delete Contact Query"
+        message={`Are you sure you want to delete the query from "${queryToDelete?.name}"? This action cannot be undone and the query will be permanently removed.`}
+        confirmText="Delete Query"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

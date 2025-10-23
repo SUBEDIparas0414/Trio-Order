@@ -17,9 +17,11 @@ import {
   FiCalendar,
   FiRefreshCw,
   FiAlertCircle,
-  FiLoader
+  FiLoader,
+  FiTrash2
 } from 'react-icons/fi';
 import { useNotification, NotificationContainer } from './Notification';
+import ConfirmationDialog from './ConfirmationDialog';
 
 const Order = () => {
   // State management
@@ -32,6 +34,9 @@ const Order = () => {
   const [showModal, setShowModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Notification system
   const { notifications, hideNotification, showSuccess, showError } = useNotification();
@@ -140,38 +145,60 @@ const Order = () => {
   };
 
   // Handle order deletion by admin
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm('Are you sure you want to delete this order from the admin panel? This will not affect the customer\'s order history.')) {
-      return;
-    }
+  const handleDeleteOrderClick = (orderId) => {
+    const order = orders.find(o => o._id === orderId);
+    setOrderToDelete(order);
+    setShowDeleteDialog(true);
+  };
 
+  const handleDeleteOrderConfirm = async () => {
+    if (!orderToDelete) return;
+    
+    setIsDeleting(true);
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      const response = await axios.delete(`http://localhost:4000/api/orders/getall/${orderId}`, {
+      const response = await axios.delete(`http://localhost:4000/api/orders/getall/${orderToDelete._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.success) {
         // Remove order from local state
-        setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+        setOrders(prevOrders => prevOrders.filter(order => order._id !== orderToDelete._id));
         
         // Close modal if it's the deleted order
-        if (selectedOrder && selectedOrder._id === orderId) {
+        if (selectedOrder && selectedOrder._id === orderToDelete._id) {
           closeModal();
         }
         
-        alert('✅ Order deleted successfully from admin panel!\n\nThe customer\'s order history remains unchanged.');
+        showSuccess(
+          'Order Deleted Successfully',
+          'The order has been removed from the admin panel',
+          'The customer\'s order history remains unchanged.'
+        );
+        setShowDeleteDialog(false);
+        setOrderToDelete(null);
       } else {
         throw new Error(response.data.message || 'Failed to delete order');
       }
     } catch (err) {
       console.error('Error deleting order:', err);
-      alert(`❌ Failed to delete order!\n\nError: ${err.response?.data?.message || err.message}\n\nPlease try again.`);
+      showError(
+        'Failed to Delete Order',
+        err.response?.data?.message || err.message,
+        'Please try again or contact support if the issue persists.'
+      );
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteOrderCancel = () => {
+    setShowDeleteDialog(false);
+    setOrderToDelete(null);
   };
 
   // Handle status change with comprehensive error handling
@@ -653,11 +680,11 @@ const Order = () => {
                               </button>
                               {(order.status === 'delivered' || order.status === 'cancelled') && (
                                 <button
-                                  onClick={() => handleDeleteOrder(order._id)}
+                                  onClick={() => handleDeleteOrderClick(order._id)}
                                   className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
                                   title="Delete Order"
                                 >
-                                  <FiX />
+                                  <FiTrash2 />
                                 </button>
                               )}
                             </div>
@@ -903,6 +930,19 @@ const Order = () => {
       <NotificationContainer 
         notifications={notifications} 
         onHide={hideNotification} 
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={handleDeleteOrderCancel}
+        onConfirm={handleDeleteOrderConfirm}
+        title="Delete Order"
+        message={`Are you sure you want to delete order #${orderToDelete?._id?.slice(-6)}? This will remove it from the admin panel but won't affect the customer's order history.`}
+        confirmText="Delete Order"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isDeleting}
       />
     </div>
   );
