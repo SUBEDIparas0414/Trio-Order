@@ -1,6 +1,7 @@
 import "dotenv/config";
 import Stripe from "stripe";
 import Order from "../models/orderModel.js";
+import Notification from "../models/notificationModel.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -276,6 +277,39 @@ export const updateAnyOrder = async (req, res) => {
       return res.status(404).json({ message: "order not found" });
     }
     
+    // Create a notification for the user about status changes
+    try {
+      if (updated && (req.body.status || req.body.expectedDelivery || req.body.deliveredAt)) {
+        const status = updated.status || 'pending';
+        const statusLabelMap = {
+          pending: 'Pending',
+          processing: 'Processing',
+          preparing: 'Preparing',
+          outForDelivery: 'Out for Delivery',
+          delivered: 'Delivered',
+          cancelled: 'Cancelled',
+        };
+        const title = `Order ${statusLabelMap[status] || status}`;
+        let message = `Your order #${String(updated._id).slice(-8)} status is now ${statusLabelMap[status] || status}.`;
+        if (status === 'outForDelivery' && updated.expectedDelivery) {
+          message += ` Expected delivery: ${new Date(updated.expectedDelivery).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}.`;
+        }
+        if (status === 'delivered' && updated.deliveredAt) {
+          message += ` Delivered on ${new Date(updated.deliveredAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}.`;
+        }
+        await Notification.create({
+          userId: updated.user,
+          orderId: updated._id,
+          type: 'status_update',
+          title,
+          message,
+          priority: 'medium',
+        });
+      }
+    } catch (notifyErr) {
+      console.error('Failed to create order status notification:', notifyErr);
+    }
+
     res.json({
       success: true,
       message: "Order updated successfully",

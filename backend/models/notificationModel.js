@@ -6,14 +6,18 @@ const notificationSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  orderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order',
+  },
   contactQueryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ContactQuery',
-    required: true
   },
+  // 'status_update' kept for backward compatibility; also used for order updates
   type: {
     type: String,
-    enum: ['status_update', 'admin_response', 'query_resolved'],
+    enum: ['status_update', 'admin_response', 'query_resolved', 'order_status'],
     required: true
   },
   title: {

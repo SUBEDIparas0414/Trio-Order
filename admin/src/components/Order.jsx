@@ -448,8 +448,8 @@ const Order = () => {
           {/* Orders Table */}
           <div className="overflow-x-auto relative">
             {/* Scroll Indicators */}
-            <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500/20 to-transparent w-8 h-full pointer-events-none z-10"></div>
-            <div className="absolute bottom-0 right-0 bg-gradient-to-l from-amber-500/20 to-transparent w-8 h-full pointer-events-none z-10"></div>
+            <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500/10 to-transparent w-4 h-full pointer-events-none z-10"></div>
+            <div className="absolute bottom-0 right-0 bg-gradient-to-l from-amber-500/10 to-transparent w-4 h-full pointer-events-none z-10"></div>
             
             <div className="relative">
               {/* Custom Scrollbar Styling */}
@@ -483,17 +483,15 @@ const Order = () => {
                     <th className="p-4 text-left text-amber-400 w-48">Customer</th>
                     <th className="p-4 text-left text-amber-400 w-40">Contact</th>
                     <th className="p-4 text-left text-amber-400 w-48">Address</th>
-                    <th className="p-4 text-left text-amber-400 w-64">Items</th>
                     <th className="p-4 text-center text-amber-400 w-32">Total</th>
-                    <th className="p-4 text-left text-amber-400 w-40">Payment</th>
                     <th className="p-4 text-left text-amber-400 w-48">Status</th>
-                    <th className="p-4 text-left text-amber-400 w-24">Actions</th>
+                    <th className="p-4 text-left text-amber-400 w-40">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.length === 0 ? (
                     <tr>
-                      <td colSpan="9" className="p-8 text-center">
+                      <td colSpan="7" className="p-8 text-center">
                         <div className="text-amber-400/70">
                           <FiBox className="text-4xl mx-auto mb-2" />
                           <p className="text-lg">No orders found</p>
@@ -549,63 +547,13 @@ const Order = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="p-4">
-                            <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
-                              {order.items.map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-[#3a2b2b]/30 hover:bg-[#3a2b2b]/50 transition-colors">
-                                  <div className="relative">
-                                  <img
-                                    src={item.item.imageUrl ? 
-                                      (item.item.imageUrl.startsWith('http') ? 
-                                        item.item.imageUrl : 
-                                        `http://localhost:4000${item.item.imageUrl}`) : 
-                                      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMyYTJhMmEiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjM2EzYTNhIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMiIgcng9IjgiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMjAiIGZpbGw9IiM2NjYiLz48cGF0aCBkPSJNNjAgMTQwIEwxMDAgMTAwIEwxNDAgMTQwIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHRleHQgeD0iMTAwIiB5PSIxNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+"
-                                    }
-                                    alt={item.item.name}
-                                    className="w-12 h-12 object-cover rounded-lg flex-shrink-0 border border-amber-500/20"
-                                    onError={(e) => {
-                                      console.log('Image failed to load:', e.target.src);
-                                      e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMyYTJhMmEiLz48cmVjdCB4PSIyMCIgeT0iMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiBmaWxsPSIjM2EzYTNhIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMiIgcng9IjgiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI4MCIgcj0iMjAiIGZpbGw9IiM2NjYiLz48cGF0aCBkPSJNNjAgMTQwIEwxMDAgMTAwIEwxNDAgMTQwIiBzdHJva2U9IiM2NjYiIHN0cm9rZS13aWR0aD0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHRleHQgeD0iMTAwIiB5PSIxNzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+";
-                                    }}
-                                  />
-                                    <div className="absolute -top-1 -right-1 bg-amber-500 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                                      {item.quantity}
-                                    </div>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <span className="text-amber-100/90 text-sm block truncate font-medium">
-                                      {item.item.name}
-                                    </span>
-                                    <div className="flex items-center gap-2 text-xs text-amber-400/70">
-                                      <span>₹{item.item.price.toFixed(2)}</span>
-                                      <span>&dot;</span>
-                                      <span>x{item.quantity}</span>
-                                      <span className="text-amber-300 font-medium">
-                                        = ₹{(item.item.price * item.quantity).toFixed(2)}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </td>
+                          
                           <td className="p-4 text-center">
                             <div className="flex items-center justify-center gap-1">
                               <FiBox className="text-amber-400" />
                               <span className="text-amber-300 text-lg font-medium">
                                 ₹{totalPrice.toFixed(2)}
                               </span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${paymentConfig[order.paymentMethod?.toLowerCase()]?.class || paymentConfig.online.class}`}>
-                                {paymentConfig[order.paymentMethod?.toLowerCase()]?.label || 'Online Payment'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 mt-1">
-                              <StatusIcon className="text-lg" />
-                              <span>{order.paymentStatus}</span>
                             </div>
                           </td>
                           <td className="p-4">
@@ -620,39 +568,7 @@ const Order = () => {
                                 </span>
                               </div>
                               
-                              {/* Status Change Dropdown */}
-                              <div className="relative">
-                                <select
-                                  value={order.status}
-                                  onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                  disabled={updatingStatus === order._id}
-                                  className={`w-full px-3 py-2 rounded-lg ${statusInfo.bg} ${statusInfo.color} border border-amber-500/20 text-sm cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all`}
-                                >
-                                  <option value="pending" className="bg-yellow-900/20 text-yellow-400">
-                                    Pending
-                                  </option>
-                                  <option value="processing" className="bg-blue-900/20 text-blue-400">
-                                    Processing
-                                  </option>
-                                  <option value="preparing" className="bg-orange-900/20 text-orange-400">
-                                    Preparing
-                                  </option>
-                                  <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">
-                                    Out for Delivery
-                                  </option>
-                                  <option value="delivered" className="bg-green-900/20 text-green-400">
-                                    Delivered
-                                  </option>
-                                  <option value="cancelled" className="bg-red-900/20 text-red-400">
-                                    Cancelled
-                                  </option>
-                                </select>
-                                {updatingStatus === order._id && (
-                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-                                    <div className="text-amber-400 text-xs">Updating...</div>
-                                  </div>
-                                )}
-                              </div>
+                              
                               
                               {/* Delivery Information */}
                               {order.expectedDelivery && (
@@ -670,23 +586,45 @@ const Order = () => {
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => openOrderDetails(order)}
-                                className="p-2 text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 rounded-lg transition-colors"
-                                title="View Details"
-                              >
-                                <FiEye />
-                              </button>
-                              {(order.status === 'delivered' || order.status === 'cancelled') && (
-                                <button
-                                  onClick={() => handleDeleteOrderClick(order._id)}
-                                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
-                                  title="Delete Order"
+                            <div className="flex flex-col gap-2">
+                              <div className="relative">
+                                <select
+                                  value={order.status}
+                                  onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                  disabled={updatingStatus === order._id}
+                                  className={`w-full px-3 py-2 rounded-lg ${statusInfo.bg} ${statusInfo.color} border border-amber-500/20 text-sm cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all`}
                                 >
-                                  <FiTrash2 />
+                                  <option value="pending" className="bg-yellow-900/20 text-yellow-400">Pending</option>
+                                  <option value="processing" className="bg-blue-900/20 text-blue-400">Processing</option>
+                                  <option value="preparing" className="bg-orange-900/20 text-orange-400">Preparing</option>
+                                  <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">Out for Delivery</option>
+                                  <option value="delivered" className="bg-green-900/20 text-green-400">Delivered</option>
+                                  <option value="cancelled" className="bg-red-900/20 text-red-400">Cancelled</option>
+                                </select>
+                                {updatingStatus === order._id && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+                                    <div className="text-amber-400 text-xs">Updating...</div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => openOrderDetails(order)}
+                                  className="p-2 text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 rounded-lg transition-colors"
+                                  title="View Details"
+                                >
+                                  <FiEye />
                                 </button>
-                              )}
+                                {(order.status === 'delivered' || order.status === 'cancelled') && (
+                                  <button
+                                    onClick={() => handleDeleteOrderClick(order._id)}
+                                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+                                    title="Delete Order"
+                                  >
+                                    <FiTrash2 />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </td>
                         </tr>

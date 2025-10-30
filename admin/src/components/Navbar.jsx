@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
 import {navLinks, styles} from '../assets/dummyadmin'
 import { GiChefToque } from "react-icons/gi";
 import { FiMenu, FiX, FiLogOut } from 'react-icons/fi';
@@ -8,6 +9,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Navbar = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
+    const [orderCount, setOrderCount] = useState(0);
+
+    // Poll for new/pending orders every 2s (near real-time)
+    useEffect(() => {
+        const fetchCount = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const res = await axios.get('http://localhost:4000/api/orders/getall', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const orders = res.data?.orders || [];
+                const activeStatuses = new Set(['pending','processing','preparing','outForDelivery']);
+                const count = orders.filter(o => activeStatuses.has((o.status||'pending')) && !o.deletedByAdmin).length;
+                setOrderCount(count);
+            } catch (e) {
+                // silent fail to avoid UI noise
+            }
+        };
+        fetchCount();
+        const id = setInterval(fetchCount, 2000);
+        return () => clearInterval(id);
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -72,7 +96,14 @@ const Navbar = () => {
                     }
                   >
                     <span className="text-lg">{link.icon}</span>
-                    <span className="font-medium">{link.name}</span>
+                    <span className="font-medium relative inline-flex items-center">
+                      {link.name}
+                      {link.name === 'Orders' && orderCount > 0 && (
+                        <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-black bg-amber-400 rounded-full">
+                          {orderCount}
+                        </span>
+                      )}
+                    </span>
                   </NavLink>
                 </motion.div>
               ))}
@@ -141,7 +172,14 @@ const Navbar = () => {
                       }
                     >
                       <span className="text-xl">{link.icon}</span>
-                      <span className="font-medium">{link.name}</span>
+                      <span className="font-medium inline-flex items-center">
+                        {link.name}
+                        {link.name === 'Orders' && orderCount > 0 && (
+                          <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-black bg-amber-400 rounded-full">
+                            {orderCount}
+                          </span>
+                        )}
+                      </span>
                     </NavLink>
                   </motion.div>
                 ))}
