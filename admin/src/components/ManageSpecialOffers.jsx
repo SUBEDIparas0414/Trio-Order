@@ -269,21 +269,21 @@ const ManageSpecialOffers = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] py-8 px-4 sm:px-6 lg:px-8"
+      className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] py-6 sm:py-8 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="card-glass"
+          className="card-glass p-4 sm:p-6 lg:p-8"
         >
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
             <motion.h2 
               initial={{ x: -30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-h2 font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent"
+              className="text-xl sm:text-2xl lg:text-h2 font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent"
             >
               Manage Special Offers
             </motion.h2>
@@ -294,7 +294,7 @@ const ManageSpecialOffers = () => {
                 console.log('Add Special Offer button clicked');
                 setShowForm(true);
               }}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <FiTag className="text-lg" />
               Add Special Offer
@@ -308,30 +308,37 @@ const ManageSpecialOffers = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6"
+                onClick={resetForm}
               >
                 <motion.div 
                   initial={{ scale: 0.8, opacity: 0, y: 50 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.8, opacity: 0, y: 50 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className="card-glass w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                  className="card-glass w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 lg:p-10"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-h3 font-bold text-[#F5F5F5]">
-                      {editingOffer ? 'Edit Special Offer' : 'Add New Special Offer'}
-                    </h3>
+                  <div className="flex justify-between items-start mb-8 sm:mb-10 pb-6 sm:pb-8 pt-4 sm:pt-6 border-b-2 border-white/20">
+                    <div className="flex-1 pr-4">
+                      <h3 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-[#FF4C29] via-[#FF6B35] to-[#FFD369] bg-clip-text text-transparent leading-tight mb-2 tracking-tight">
+                        {editingOffer ? 'Edit Special Offer' : 'Add New Special Offer'}
+                      </h3>
+                      <p className="text-sm sm:text-base text-[#B3B3B3]/70 mt-2">
+                        {editingOffer ? 'Update the special offer details below' : 'Fill in the details to create a new special offer'}
+                      </p>
+                    </div>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={resetForm}
-                      className="text-[#B3B3B3] hover:text-white text-2xl p-2 rounded-lg hover:bg-white/5 transition-all"
+                      className="text-[#B3B3B3] hover:text-white text-3xl sm:text-4xl p-2 sm:p-3 rounded-xl hover:bg-white/10 transition-all flex-shrink-0 mt-1"
                     >
                       ×
                     </motion.button>
                   </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 mt-8 sm:mt-10">
                   {/* Image Upload */}
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}
@@ -339,17 +346,17 @@ const ManageSpecialOffers = () => {
                     transition={{ delay: 0.1 }}
                     className="flex justify-center"
                   >
-                    <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-xs h-48">
+                    <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-4 sm:p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-xs sm:max-w-sm h-40 sm:h-48 mx-auto">
                       {formData.preview ? (
                         <img
                           src={formData.preview}
                           alt="Preview"
-                          className="max-h-full rounded-lg shadow-md object-cover"
+                          className="w-full h-full object-contain rounded-lg shadow-md"
                         />
                       ) : (
-                        <div className="flex flex-col items-center text-center">
-                          <FiUpload className="text-4xl text-[#FF4C29] mb-3" />
-                          <p className="text-[#B3B3B3] text-sm">
+                        <div className="flex flex-col items-center justify-center text-center w-full h-full">
+                          <FiUpload className="text-3xl sm:text-4xl text-[#FF4C29] mb-2 sm:mb-3" />
+                          <p className="text-[#B3B3B3] text-xs sm:text-sm px-2">
                             Click to upload offer image
                           </p>
                         </div>
@@ -369,13 +376,13 @@ const ManageSpecialOffers = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <label className="block text-[#B3B3B3] mb-2 font-medium">Title</label>
+                    <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Title</label>
                     <input
                       type="text"
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      className="input"
+                      className="input text-sm sm:text-base"
                       placeholder="e.g., Weekend Special - 30% Off"
                       required
                     />
@@ -387,12 +394,12 @@ const ManageSpecialOffers = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    <label className="block text-[#B3B3B3] mb-2 font-medium">Description</label>
+                    <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Description</label>
                     <textarea
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      className="input h-24 resize-none"
+                      className="input h-20 sm:h-24 resize-none text-sm sm:text-base"
                       placeholder="Describe the special offer..."
                       required
                     />
@@ -404,12 +411,12 @@ const ManageSpecialOffers = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <label className="block text-[#B3B3B3] mb-2 font-medium">Select Item</label>
+                    <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Select Item</label>
                     <select
                       name="itemId"
                       value={formData.itemId}
                       onChange={handleInputChange}
-                      className="input"
+                      className="input text-sm sm:text-base"
                       required
                     >
                       <option value="">Choose an item...</option>
@@ -422,21 +429,21 @@ const ManageSpecialOffers = () => {
                   </motion.div>
 
                   {/* Price Fields */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <motion.div 
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.5 }}
                     >
-                      <label className="block text-[#B3B3B3] mb-2 font-medium">Original Price</label>
+                      <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Original Price</label>
                       <div className="relative">
-                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
+                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-sm sm:text-base pointer-events-none" />
                         <input
                           type="number"
                           name="originalPrice"
                           value={formData.originalPrice}
                           onChange={handleInputChange}
-                          className="input"
+                          className="input text-sm sm:text-base"
                           placeholder="0.00"
                           style={{ paddingLeft: '2.5rem' }}
                           min="0"
@@ -450,15 +457,15 @@ const ManageSpecialOffers = () => {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.55 }}
                     >
-                      <label className="block text-[#B3B3B3] mb-2 font-medium">Discounted Price</label>
+                      <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Discounted Price</label>
                       <div className="relative">
-                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
+                        <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-sm sm:text-base pointer-events-none" />
                         <input
                           type="number"
                           name="discountedPrice"
                           value={formData.discountedPrice}
                           onChange={handleInputChange}
-                          className="input"
+                          className="input text-sm sm:text-base"
                           placeholder="0.00"
                           style={{ paddingLeft: '2.5rem' }}
                           min="0"
@@ -475,21 +482,21 @@ const ManageSpecialOffers = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.6 }}
                   >
-                    <label className="block text-[#B3B3B3] mb-2 font-medium">Discount Percentage</label>
+                    <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Discount Percentage</label>
                     <div className="relative">
                       <input
                         type="number"
                         name="discountPercentage"
                         value={formData.discountPercentage}
                         onChange={handleInputChange}
-                        className="input"
+                        className="input text-sm sm:text-base"
                         placeholder="0"
                         style={{ paddingRight: '2.5rem' }}
                         min="0"
                         max="100"
                         required
                       />
-                      <FiPercent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
+                      <FiPercent className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-sm sm:text-base pointer-events-none" />
                     </div>
                   </motion.div>
 
@@ -499,15 +506,15 @@ const ManageSpecialOffers = () => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.65 }}
                   >
-                    <label className="block text-[#B3B3B3] mb-2 font-medium">Valid Until</label>
+                    <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Valid Until</label>
                     <div className="relative">
-                      <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
+                      <FiCalendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-sm sm:text-base pointer-events-none" />
                       <input
                         type="date"
                         name="validUntil"
                         value={formData.validUntil}
                         onChange={handleInputChange}
-                        className="input"
+                        className="input text-sm sm:text-base"
                         style={{ paddingLeft: '2.5rem' }}
                         min={new Date().toISOString().split('T')[0]}
                         required
@@ -516,19 +523,19 @@ const ManageSpecialOffers = () => {
                   </motion.div>
 
                   {/* Priority and Tags */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <motion.div 
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.7 }}
                     >
-                      <label className="block text-[#B3B3B3] mb-2 font-medium">Priority (0-10)</label>
+                      <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Priority (0-10)</label>
                       <input
                         type="number"
                         name="priority"
                         value={formData.priority}
                         onChange={handleInputChange}
-                        className="input"
+                        className="input text-sm sm:text-base"
                         placeholder="0"
                         min="0"
                         max="10"
@@ -539,13 +546,13 @@ const ManageSpecialOffers = () => {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.75 }}
                     >
-                      <label className="block text-[#B3B3B3] mb-2 font-medium">Tags (comma separated)</label>
+                      <label className="block text-[#B3B3B3] mb-2 font-medium text-sm sm:text-base">Tags (comma separated)</label>
                       <input
                         type="text"
                         name="tags"
                         value={formData.tags}
                         onChange={handleInputChange}
-                        className="input"
+                        className="input text-sm sm:text-base"
                         placeholder="limited-time, popular, new"
                       />
                     </motion.div>
@@ -555,14 +562,14 @@ const ManageSpecialOffers = () => {
                   <motion.div 
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.6 }}
-                    className="flex gap-4 pt-4"
+                    transition={{ delay: 0.8 }}
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4"
                   >
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       type="submit"
-                      className="btn-primary flex-1"
+                      className="btn-primary flex-1 text-sm sm:text-base py-3"
                     >
                       {editingOffer ? 'Update Offer' : 'Create Offer'}
                     </motion.button>
@@ -571,7 +578,7 @@ const ManageSpecialOffers = () => {
                       whileTap={{ scale: 0.98 }}
                       type="button"
                       onClick={resetForm}
-                      className="btn-secondary"
+                      className="btn-secondary text-sm sm:text-base py-3 sm:px-6"
                     >
                       Cancel
                     </motion.button>
@@ -582,12 +589,12 @@ const ManageSpecialOffers = () => {
             )}
           </AnimatePresence>
 
-          {/* Special Offers List */}
+          {/* Desktop Special Offers Table */}
           <motion.div 
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="overflow-x-auto"
+            className="hidden md:block overflow-x-auto"
           >
             <table className="w-full">
               <thead className="bg-white/5 backdrop-blur-sm">
@@ -692,6 +699,106 @@ const ManageSpecialOffers = () => {
                 )}
               </tbody>
             </table>
+          </motion.div>
+
+          {/* Mobile Card View */}
+          <motion.div 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="md:hidden space-y-4"
+          >
+            {specialOffers.length === 0 ? (
+              <div className="text-center py-12 text-[#B3B3B3] text-xl">
+                No special offers found
+              </div>
+            ) : (
+              specialOffers.map((offer, index) => (
+                <motion.div
+                  key={offer._id}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all"
+                >
+                  <div className="flex gap-4 mb-4">
+                    {offer.imageUrl ? (
+                      <img
+                        src={offer.imageUrl}
+                        alt={offer.title}
+                        className="w-20 h-20 object-cover rounded-lg shadow-md flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FiTag className="text-[#FF4C29] text-2xl" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[#F5F5F5] font-medium text-base mb-1 truncate">{offer.title}</h3>
+                      <p className="text-sm text-[#B3B3B3] line-clamp-2 mb-2">{offer.description}</p>
+                      <span className="inline-block px-2 py-1 rounded-full bg-[#FF4C29]/20 text-[#FF4C29] text-xs font-medium border border-[#FF4C29]/30">
+                        {offer.item?.name || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <p className="text-xs text-[#B3B3B3] mb-1">Original Price</p>
+                      <p className="text-[#F5F5F5] text-sm">₹{offer.originalPrice}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#B3B3B3] mb-1">Discounted Price</p>
+                      <p className="text-green-400 font-semibold text-sm">₹{offer.discountedPrice}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#B3B3B3] mb-1">Discount</p>
+                      <p className="text-red-400 font-semibold text-sm">{offer.discountPercentage}%</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#B3B3B3] mb-1">Valid Until</p>
+                      <p className={`text-xs ${isExpired(offer.validUntil) ? 'text-red-400' : 'text-[#F5F5F5]'}`}>
+                        {formatDate(offer.validUntil)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleToggleStatus(offer._id)}
+                      className="flex items-center gap-2"
+                    >
+                      {offer.isActive ? (
+                        <FiToggleRight className="text-green-400 text-xl" />
+                      ) : (
+                        <FiToggleLeft className="text-gray-400 text-xl" />
+                      )}
+                      <span className={`text-sm ${offer.isActive ? 'text-green-400' : 'text-gray-400'}`}>
+                        {offer.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </motion.button>
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleEdit(offer)}
+                        className="text-[#FFD369] hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5"
+                      >
+                        <FiEdit />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleDeleteClick(offer._id)}
+                        className="text-red-400 hover:text-red-300 transition-colors p-2 rounded-lg hover:bg-red-500/10"
+                      >
+                        <FiTrash2 />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </motion.div>
         </motion.div>
       </div>

@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 const cartItemSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',   // ✅ make sure your user model is exported as "User"
+    ref: 'User',   //  make sure your user model is exported as "User"
     required: true
   },
   item: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Item',   // ✅ matches "Item" model
+    ref: 'Item',   // matches "Item" model
     required: true,
   },
   quantity: {

@@ -163,7 +163,7 @@ export const getRecommendations = async (req, res) => {
       };
     });
 
-    console.log(`✅ Sending ${enrichedRecommendations.length} Apriori-based recommendations`);
+    console.log(` Sending ${enrichedRecommendations.length} Apriori-based recommendations`);
     enrichedRecommendations.forEach((rec, idx) => {
       console.log(`  ${idx + 1}. ${rec.name} (score: ${rec.recommendationScore.toFixed(2)}, based on: ${rec.basedOn.join(', ')})`);
     });

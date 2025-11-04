@@ -92,20 +92,20 @@ const AddItems = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] flex items-center justify-center px-4 py-8"
+      className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8"
     >
       <div className="w-full max-w-2xl">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="card-glass"
+          className="card-glass p-4 sm:p-6 lg:p-8"
         >
           <motion.h2 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-center text-h2 font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent mb-8"
+            className="text-center text-xl sm:text-2xl lg:text-h2 font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent mb-6 sm:mb-8"
           >
             Add New Menu Item
           </motion.h2>
@@ -118,7 +118,7 @@ const AddItems = () => {
               transition={{ delay: 0.1 }}
               className="flex justify-center"
             >
-              <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-xs h-48">
+              <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-4 sm:p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-xs mx-auto h-40 sm:h-48">
                 {formData.preview ? (
                   <img
                     src={formData.preview}
@@ -230,7 +230,7 @@ const AddItems = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
             >
               {/* Rating */}
               <div>

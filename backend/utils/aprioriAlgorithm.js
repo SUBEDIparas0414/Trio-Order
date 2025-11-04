@@ -1,5 +1,5 @@
 /**
- * Apriori Algorithm Implementation (No External Libraries)
+ * Apriori Algorithm Implementation 
  * Generates frequent itemsets and association rules from transaction data
  */
 

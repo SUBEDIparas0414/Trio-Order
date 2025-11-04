@@ -147,7 +147,7 @@ const ContactQueries = () => {
   }
 
   return (
-    <div className="p-6 bg-gradient-to-b from-[#121212] to-[#1A1A1A] min-h-screen">
+    <div className="p-4 sm:p-6 bg-gradient-to-b from-[#121212] to-[#1A1A1A] min-h-screen">
       {/* Toast Notification */}
       <AnimatePresence>
         {toast.visible && (
@@ -156,7 +156,7 @@ const ContactQueries = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -100, scale: 0.8 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed top-6 right-6 z-50"
+            className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 max-w-[calc(100%-2rem)]"
           >
             <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border-2 ${
               toast.type === 'success' 
@@ -175,13 +175,13 @@ const ContactQueries = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Contact Queries</h1>
-        <p className="text-gray-400">Manage customer queries and complaints</p>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Contact Queries</h1>
+        <p className="text-gray-400 text-sm sm:text-base">Manage customer queries and complaints</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -243,12 +243,12 @@ const ContactQueries = () => {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         {['all', 'pending', 'in_progress', 'resolved', 'closed'].map((status) => (
           <button
             key={status}
             onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               filter === status
                 ? 'bg-[#FF4C29] text-white'
                 : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
@@ -259,8 +259,8 @@ const ContactQueries = () => {
         ))}
       </div>
 
-      {/* Queries Table */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
+      {/* Desktop Queries Table */}
+      <div className="hidden md:block bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-white/5">
@@ -336,6 +336,69 @@ const ContactQueries = () => {
         </div>
       </div>
 
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {filteredQueries.map((query, index) => (
+          <motion.div
+            key={query._id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-colors"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white font-medium text-base mb-1 truncate">{query.fullName}</h3>
+                <p className="text-gray-400 text-xs truncate">{query.email}</p>
+                {query.phoneNumber && (
+                  <p className="text-gray-500 text-xs mt-1">{query.phoneNumber}</p>
+                )}
+              </div>
+              <div className="flex flex-col gap-2 items-end">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(query.status)}`}>
+                  {query.status.replace('_', ' ')}
+                </span>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(query.priority)}`}>
+                  {query.priority}
+                </span>
+              </div>
+            </div>
+            <div className="mb-3">
+              <p className="text-white text-sm line-clamp-2">{query.query}</p>
+              {query.dishName && (
+                <p className="text-gray-400 text-xs mt-1">Dish: {query.dishName}</p>
+              )}
+            </div>
+            <div className="text-gray-400 text-xs mb-3">
+              {formatDate(query.createdAt)}
+            </div>
+            <div className="flex gap-2 pt-3 border-t border-white/10">
+              <button
+                onClick={() => {
+                  setSelectedQuery(query);
+                  setShowModal(true);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 p-2 text-blue-500 hover:bg-blue-500/20 rounded-lg transition-colors border border-blue-500/30"
+              >
+                <FiEye />
+                <span className="text-sm">View</span>
+              </button>
+              <button
+                onClick={() => deleteQueryClick(query._id)}
+                className="flex items-center justify-center gap-2 p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/30"
+              >
+                <FiTrash2 />
+              </button>
+            </div>
+          </motion.div>
+        ))}
+        {filteredQueries.length === 0 && (
+          <div className="text-center py-12 text-gray-400">
+            No queries found
+          </div>
+        )}
+      </div>
+
       {/* Query Details Modal */}
       <AnimatePresence>
         {showModal && selectedQuery && (
@@ -350,7 +413,7 @@ const ContactQueries = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-4 sm:p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-6">
@@ -405,22 +468,22 @@ const ContactQueries = () => {
                   </div>
                 )}
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     onClick={() => updateQueryStatus(selectedQuery._id, 'in_progress')}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base"
                   >
                     Mark In Progress
                   </button>
                   <button
                     onClick={() => updateQueryStatus(selectedQuery._id, 'resolved')}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm sm:text-base"
                   >
                     Mark Resolved
                   </button>
                   <button
                     onClick={() => updateQueryStatus(selectedQuery._id, 'closed')}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm sm:text-base"
                   >
                     Close Query
                   </button>

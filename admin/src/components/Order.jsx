@@ -367,16 +367,16 @@ const Order = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="bg-[#4b3b3b]/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-amber-500/20">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
+        <div className="bg-[#4b3b3b]/80 backdrop-blur-sm rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl border-2 border-amber-500/20">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
               Order Management System
             </h1>
-            <p className="text-amber-400/70 text-lg">Manage customer orders efficiently</p>
-            <div className="flex items-center justify-center gap-2 text-amber-400/60 text-sm mt-2">
+            <p className="text-amber-400/70 text-sm sm:text-base lg:text-lg">Manage customer orders efficiently</p>
+            <div className="hidden md:flex items-center justify-center gap-2 text-amber-400/60 text-sm mt-2">
               <span>💡</span>
               <span>Scroll horizontally to view all order details</span>
               <span>→</span>
@@ -384,7 +384,7 @@ const Order = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="bg-[#3a2b2b]/50 p-4 rounded-lg text-center">
               <div className="text-2xl font-bold text-amber-300">{orders.length}</div>
               <div className="text-amber-400/70 text-sm">Total Orders</div>
@@ -445,8 +445,8 @@ const Order = () => {
             </button>
           </div>
 
-          {/* Orders Table */}
-          <div className="overflow-x-auto relative">
+          {/* Desktop Orders Table */}
+          <div className="hidden lg:block overflow-x-auto relative">
             {/* Scroll Indicators */}
             <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-500/10 to-transparent w-4 h-full pointer-events-none z-10"></div>
             <div className="absolute bottom-0 right-0 bg-gradient-to-l from-amber-500/10 to-transparent w-4 h-full pointer-events-none z-10"></div>
@@ -635,12 +635,141 @@ const Order = () => {
               </table>
             </div>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden space-y-4 mt-6">
+            {filteredOrders.length === 0 ? (
+              <div className="text-center py-12 text-amber-400/70">
+                <FiBox className="text-4xl mx-auto mb-2" />
+                <p className="text-lg">No orders found</p>
+                <p className="text-sm">Try adjusting your search or filter criteria</p>
+              </div>
+            ) : (
+              filteredOrders.map((order) => {
+                const statusInfo = statusConfig[order.status] || statusConfig.pending;
+                const StatusIcon = statusInfo.icon;
+                const totalPrice = calculateTotalPrice(order.items);
+                
+                return (
+                  <div
+                    key={order._id}
+                    className="bg-[#3a2b2b]/50 rounded-xl p-4 border border-amber-500/20 hover:bg-[#3a2b2b]/70 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-mono text-amber-300 text-sm font-semibold mb-1">
+                          #{order._id.slice(-8)}
+                        </div>
+                        <div className="text-xs text-amber-400/60 mb-2">{order.createdAt}</div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <StatusIcon className={`${statusInfo.color} text-base`} />
+                          <span className={`${statusInfo.color} text-sm font-medium`}>
+                            {statusInfo.label}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-center gap-1 mb-1">
+                          <FiBox className="text-amber-400 text-sm" />
+                          <span className="text-amber-300 font-semibold">
+                            ₹{totalPrice.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <FiUser className="text-amber-400 text-sm flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-amber-100 font-medium text-sm truncate">
+                            {order.firstName} {order.lastName}
+                          </div>
+                          <div className="text-xs text-amber-400/60 truncate">
+                            {order.email}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FiPhone className="text-amber-400 text-sm flex-shrink-0" />
+                        <span className="text-amber-100 text-sm">{order.phone}</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <FiMapPin className="text-amber-400 text-sm mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-amber-100 text-xs line-clamp-2">
+                            {order.address}
+                          </div>
+                          <div className="text-xs text-amber-400/60">
+                            {order.city} - {order.zipCode}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {order.expectedDelivery && (
+                      <div className="text-xs text-amber-400/80 bg-amber-900/10 px-2 py-1 rounded mb-2">
+                        <FiCalendar className="inline mr-1" />
+                        Expected: {order.expectedDelivery}
+                      </div>
+                    )}
+                    {order.deliveredAt && (
+                      <div className="text-xs text-green-400/80 bg-green-900/10 px-2 py-1 rounded mb-2">
+                        <FiCalendar className="inline mr-1" />
+                        Delivered: {order.deliveredAt}
+                      </div>
+                    )}
+
+                    <div className="space-y-2 pt-3 border-t border-amber-500/20">
+                      <div className="relative">
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          disabled={updatingStatus === order._id}
+                          className={`w-full px-3 py-2 rounded-lg ${statusInfo.bg} ${statusInfo.color} border border-amber-500/20 text-sm cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all`}
+                        >
+                          <option value="pending" className="bg-yellow-900/20 text-yellow-400">Pending</option>
+                          <option value="processing" className="bg-blue-900/20 text-blue-400">Processing</option>
+                          <option value="preparing" className="bg-orange-900/20 text-orange-400">Preparing</option>
+                          <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">Out for Delivery</option>
+                          <option value="delivered" className="bg-green-900/20 text-green-400">Delivered</option>
+                          <option value="cancelled" className="bg-red-900/20 text-red-400">Cancelled</option>
+                        </select>
+                        {updatingStatus === order._id && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+                            <div className="text-amber-400 text-xs">Updating...</div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openOrderDetails(order)}
+                          className="flex-1 flex items-center justify-center gap-2 p-2 text-amber-400 hover:text-amber-300 hover:bg-amber-900/20 rounded-lg transition-colors border border-amber-500/30"
+                        >
+                          <FiEye />
+                          <span className="text-sm">View</span>
+                        </button>
+                        {(order.status === 'delivered' || order.status === 'cancelled') && (
+                          <button
+                            onClick={() => handleDeleteOrderClick(order._id)}
+                            className="flex items-center justify-center gap-2 p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors border border-red-500/30"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
         {/* Order Details Modal */}
         {showModal && selectedOrder && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-[#4b3b3b] rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-[#4b3b3b] rounded-2xl p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-amber-300">
                   Order Details - #{selectedOrder._id.slice(-8)}
@@ -653,7 +782,7 @@ const Order = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 {/* Customer Information */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-amber-300 flex items-center gap-2">

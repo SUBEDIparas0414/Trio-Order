@@ -173,7 +173,7 @@ const UserManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#1a120b] via-[#2a1e14] to-[#3e2b1d] py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
       {/* Modern Toast Notification */}
       <AnimatePresence>
         {toast.visible && (
@@ -182,7 +182,7 @@ const UserManagement = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -100, scale: 0.8 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed top-6 right-6 z-50"
+            className="fixed top-4 right-4 sm:top-6 sm:right-6 z-50 max-w-[calc(100%-2rem)]"
           >
             <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border-2 ${
               toast.type === 'success' 
@@ -210,19 +210,19 @@ const UserManagement = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="bg-[#4b3b3b]/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border-2 border-amber-500/20"
+        className="bg-[#4b3b3b]/80 backdrop-blur-sm rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl border-2 border-amber-500/20"
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-[#FF4C29] to-[#FF6B35] rounded-xl shadow-lg">
-              <FiUsers className="text-2xl text-white" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 bg-gradient-to-br from-[#FF4C29] to-[#FF6B35] rounded-xl shadow-lg">
+              <FiUsers className="text-xl sm:text-2xl text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
                 User Management
               </h1>
-              <p className="text-amber-100/60 mt-1">Manage and monitor your users</p>
+              <p className="text-amber-100/60 mt-1 text-sm sm:text-base">Manage and monitor your users</p>
             </div>
           </div>
           
@@ -230,7 +230,7 @@ const UserManagement = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={fetchUsers}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl hover:shadow-lg transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl hover:shadow-lg transition-all w-full sm:w-auto"
           >
             <FiRefreshCw className="text-lg" />
             <span className="font-medium">Refresh</span>
@@ -238,7 +238,7 @@ const UserManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -291,8 +291,8 @@ const UserManagement = () => {
           </motion.div>
         </div>
 
-        {/* Users Table */}
-        <div className="overflow-x-auto">
+        {/* Desktop Users Table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[#3a2b2b]/50">
               <tr>
@@ -428,6 +428,111 @@ const UserManagement = () => {
             <div className="text-center py-12 text-amber-100/60 text-xl">
               No users found
             </div>
+          )}
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-4">
+          {users.length === 0 ? (
+            <div className="text-center py-12 text-amber-100/60 text-xl">
+              No users found
+            </div>
+          ) : (
+            users.map((user, index) => (
+              <motion.div
+                key={user._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="bg-[#3a2b2b]/50 rounded-xl p-4 border border-amber-500/20 hover:bg-[#3a2b2b]/70 transition-all"
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-base">
+                      {user.username.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-amber-100 font-medium text-base mb-1 truncate">{user.username}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      {user.isVerified ? (
+                        <span className="flex items-center gap-1 text-xs text-green-400">
+                          <FiCheckCircle className="text-xs" />
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-yellow-400">
+                          <FiClock className="text-xs" />
+                          Pending
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`w-2 h-2 rounded-full ${
+                        user.isCurrentlyActive 
+                          ? 'bg-green-400 animate-pulse' 
+                          : 'bg-gray-400'
+                      }`}></div>
+                      <span className={`text-xs font-medium ${
+                        user.isCurrentlyActive ? 'text-green-400' : 'text-gray-400'
+                      }`}>
+                        {user.isCurrentlyActive ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-4 border-t border-amber-500/20 pt-3">
+                  <div className="flex items-center gap-2 text-amber-100/80 text-sm">
+                    <FiMail className="text-sm flex-shrink-0" />
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                  {user.phone && (
+                    <div className="flex items-center gap-2 text-amber-100/80 text-sm">
+                      <FiPhone className="text-sm flex-shrink-0" />
+                      <span>{user.phone}</span>
+                    </div>
+                  )}
+                  <div className="text-amber-100/60 text-xs">
+                    <div className="mb-1">Last Active: {getTimeAgo(user.lastActive)}</div>
+                    <div>Joined: {formatDate(user.createdAt)}</div>
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => !togglingUsers.has(user._id) && toggleUserStatus(user._id)}
+                  disabled={togglingUsers.has(user._id)}
+                  className={`w-full p-3 rounded-xl transition-all font-medium ${
+                    togglingUsers.has(user._id)
+                      ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30 cursor-not-allowed'
+                      : user.isActive 
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30' 
+                        : 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    {togglingUsers.has(user._id) ? (
+                      <>
+                        <FiRefreshCw className="text-lg animate-spin" />
+                        <span className="text-sm">Processing...</span>
+                      </>
+                    ) : user.isActive ? (
+                      <>
+                        <FiXCircle className="text-lg" />
+                        <span className="text-sm">Deactivate</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiCheckCircle className="text-lg" />
+                        <span className="text-sm">Activate</span>
+                      </>
+                    )}
+                  </div>
+                </motion.button>
+              </motion.div>
+            ))
           )}
         </div>
       </motion.div>
