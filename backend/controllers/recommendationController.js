@@ -35,7 +35,7 @@ export const trainRecommendationModel = async (req, res) => {
 
     // Initialize Apriori with configurable parameters
     const minSupport = 0.05; // 5% minimum support
-    const minConfidence = 0.3; // 30% minimum confidence
+    const minConfidence = 0.6; // 60% minimum confidence
     const apriori = new AprioriAlgorithm(minSupport, minConfidence);
 
     // Run Apriori algorithm
@@ -123,7 +123,7 @@ export const getRecommendations = async (req, res) => {
 
     // Initialize and run Apriori
     console.log('Running Apriori algorithm...');
-    const apriori = new AprioriAlgorithm(0.05, 0.3);
+    const apriori = new AprioriAlgorithm(0.05, 0.6);
     const { rules } = apriori.run(transactions);
     console.log(`Generated ${rules.length} association rules`);
 
@@ -220,7 +220,7 @@ export const getRecommendationStats = async (req, res) => {
       order.items.map(item => item.item.toString())
     );
 
-    const apriori = new AprioriAlgorithm(0.05, 0.3);
+    const apriori = new AprioriAlgorithm(0.05, 0.6);
     const { frequentItemsets, rules } = apriori.run(transactions);
 
     // Get most frequent item combinations

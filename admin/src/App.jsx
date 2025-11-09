@@ -13,6 +13,7 @@ import AdminPrivateRoute from './components/AdminPrivateRoute'
 import ManageSpecialOffers from './components/ManageSpecialOffers'
 import UserManagement from './components/UserManagement'
 import ContactQueries from './components/ContactQueries'
+import Statistics from './components/Statistics'
 
 
 const App = () => {
@@ -61,6 +62,12 @@ const App = () => {
           <AdminPrivateRoute>
             <Navbar />
             <ContactQueries />
+          </AdminPrivateRoute>
+        } />
+        <Route path='/statistics' element={
+          <AdminPrivateRoute>
+            <Navbar />
+            <Statistics />
           </AdminPrivateRoute>
         } />
     </Routes>

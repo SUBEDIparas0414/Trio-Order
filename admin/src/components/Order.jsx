@@ -65,7 +65,7 @@ const Order = () => {
       color: 'text-purple-400', 
       bg: 'bg-purple-900/20', 
       icon: FiTruck, 
-      label: 'Out for Delivery' 
+      label: 'On the Way' 
     },
     delivered: { 
       color: 'text-green-400', 
@@ -118,11 +118,24 @@ const Order = () => {
             hour: "2-digit",
             minute: "2-digit",
           }),
-          expectedDelivery: order.expectedDelivery ? new Date(order.expectedDelivery).toLocaleDateString("en-IN", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          }) : null,
+          expectedDelivery: order.expectedDelivery ? (() => {
+            const expectedDate = new Date(order.expectedDelivery);
+            const now = new Date();
+            const diffMinutes = Math.floor((expectedDate - now) / (1000 * 60));
+            
+            // If order is "On the Way" and expected delivery is within 30 minutes, show "within half an hour"
+            if (order.status === 'outForDelivery' && diffMinutes <= 30 && diffMinutes > 0) {
+              return `within ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+            } else if (order.status === 'outForDelivery' && diffMinutes <= 30) {
+              return 'within half an hour';
+            }
+            // For other statuses or if time has passed, show the date
+            return expectedDate.toLocaleDateString("en-IN", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+          })() : null,
           deliveredAt: order.deliveredAt ? new Date(order.deliveredAt).toLocaleDateString("en-IN", {
             year: "numeric",
             month: "long",
@@ -225,11 +238,24 @@ const Order = () => {
               ? { 
                   ...order, 
                   status: newStatus,
-                  expectedDelivery: response.data.order?.expectedDelivery ? new Date(response.data.order.expectedDelivery).toLocaleDateString("en-IN", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  }) : order.expectedDelivery,
+                  expectedDelivery: response.data.order?.expectedDelivery ? (() => {
+                    const expectedDate = new Date(response.data.order.expectedDelivery);
+                    const now = new Date();
+                    const diffMinutes = Math.floor((expectedDate - now) / (1000 * 60));
+                    
+                    // If order is "On the Way" and expected delivery is within 30 minutes, show "within half an hour"
+                    if (newStatus === 'outForDelivery' && diffMinutes <= 30 && diffMinutes > 0) {
+                      return `within ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+                    } else if (newStatus === 'outForDelivery' && diffMinutes <= 30) {
+                      return 'within half an hour';
+                    }
+                    // For other statuses or if time has passed, show the date
+                    return expectedDate.toLocaleDateString("en-IN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    });
+                  })() : order.expectedDelivery,
                   deliveredAt: response.data.order?.deliveredAt ? new Date(response.data.order.deliveredAt).toLocaleDateString("en-IN", {
                     year: "numeric",
                     month: "long",
@@ -247,11 +273,24 @@ const Order = () => {
           setSelectedOrder(prev => ({
             ...prev,
             status: newStatus,
-            expectedDelivery: response.data.order?.expectedDelivery ? new Date(response.data.order.expectedDelivery).toLocaleDateString("en-IN", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }) : prev.expectedDelivery,
+            expectedDelivery: response.data.order?.expectedDelivery ? (() => {
+              const expectedDate = new Date(response.data.order.expectedDelivery);
+              const now = new Date();
+              const diffMinutes = Math.floor((expectedDate - now) / (1000 * 60));
+              
+              // If order is "On the Way" and expected delivery is within 30 minutes, show "within half an hour"
+              if (newStatus === 'outForDelivery' && diffMinutes <= 30 && diffMinutes > 0) {
+                return `within ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+              } else if (newStatus === 'outForDelivery' && diffMinutes <= 30) {
+                return 'within half an hour';
+              }
+              // For other statuses or if time has passed, show the date
+              return expectedDate.toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              });
+            })() : prev.expectedDelivery,
             deliveredAt: response.data.order?.deliveredAt ? new Date(response.data.order.deliveredAt).toLocaleDateString("en-IN", {
               year: "numeric",
               month: "long",
@@ -267,15 +306,23 @@ const Order = () => {
           pending: 'Pending',
           processing: 'Processing', 
           preparing: 'Preparing',
-          outForDelivery: 'Out for Delivery',
+          outForDelivery: 'On the Way',
           delivered: 'Delivered',
           cancelled: 'Cancelled'
         };
         
+        let message = `Order #${orderId.slice(-8)} is now: ${statusLabels[newStatus]}`;
+        if (newStatus === 'outForDelivery') {
+          message += '. Customer will receive a notification and can confirm delivery once they receive the order.';
+        } else {
+          message += '. The customer will see this update in their order history.';
+        }
         showSuccess(
           'Order Status Updated!',
-          `Order #${orderId.slice(-8)} is now: ${statusLabels[newStatus]}`,
-          'The customer will see this update in their order history.'
+          message,
+          newStatus === 'outForDelivery' 
+            ? 'Customer will be notified and can mark the order as delivered after receiving it.'
+            : 'The customer will see this update in their order history.'
         );
         
       } else {
@@ -283,10 +330,18 @@ const Order = () => {
       }
     } catch (err) {
       console.error('Error updating status:', err);
+      const errorMessage = err.response?.data?.message || err.message;
+      let errorDetail = 'Please try again or contact support if the issue persists.';
+      
+      // Special handling for delivered status error
+      if (errorMessage.includes('Admin cannot mark order as delivered')) {
+        errorDetail = 'Only customers can mark orders as delivered after receiving them. Set status to "On the Way" to notify the customer.';
+      }
+      
       showError(
         'Failed to Update Order Status',
-        err.response?.data?.message || err.message,
-        'Please try again or contact support if the issue persists.'
+        errorMessage,
+        errorDetail
       );
     } finally {
       setUpdatingStatus(null);
@@ -591,14 +646,16 @@ const Order = () => {
                                 <select
                                   value={order.status}
                                   onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                  disabled={updatingStatus === order._id}
+                                  disabled={updatingStatus === order._id || order.status === 'delivered'}
                                   className={`w-full px-3 py-2 rounded-lg ${statusInfo.bg} ${statusInfo.color} border border-amber-500/20 text-sm cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all`}
                                 >
                                   <option value="pending" className="bg-yellow-900/20 text-yellow-400">Pending</option>
                                   <option value="processing" className="bg-blue-900/20 text-blue-400">Processing</option>
                                   <option value="preparing" className="bg-orange-900/20 text-orange-400">Preparing</option>
-                                  <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">Out for Delivery</option>
-                                  <option value="delivered" className="bg-green-900/20 text-green-400">Delivered</option>
+                                  <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">On the Way</option>
+                                  {order.status === 'delivered' && (
+                                    <option value="delivered" className="bg-green-900/20 text-green-400">Delivered (Confirmed by Customer)</option>
+                                  )}
                                   <option value="cancelled" className="bg-red-900/20 text-red-400">Cancelled</option>
                                 </select>
                                 {updatingStatus === order._id && (
@@ -953,7 +1010,7 @@ const Order = () => {
                       <select
                         value={selectedOrder.status}
                         onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
-                        disabled={updatingStatus === selectedOrder._id}
+                        disabled={updatingStatus === selectedOrder._id || selectedOrder.status === 'delivered'}
                         className="w-full px-4 py-3 bg-[#2a1e14]/50 border border-amber-500/20 rounded-lg text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/50 disabled:opacity-50 transition-all"
                       >
                         <option value="pending" className="bg-yellow-900/20 text-yellow-400">
@@ -966,11 +1023,13 @@ const Order = () => {
                           🟠 Preparing - Food being cooked
                         </option>
                         <option value="outForDelivery" className="bg-purple-900/20 text-purple-400">
-                          🟣 Out for Delivery - Order dispatched
+                          🟣 On the Way - Order served to delivery boy, notification sent to customer
                         </option>
-                        <option value="delivered" className="bg-green-900/20 text-green-400">
-                          🟢 Delivered - Order completed
-                        </option>
+                        {selectedOrder.status === 'delivered' && (
+                          <option value="delivered" className="bg-green-900/20 text-green-400">
+                            🟢 Delivered - Confirmed by customer
+                          </option>
+                        )}
                         <option value="cancelled" className="bg-red-900/20 text-red-400">
                           🔴 Cancelled - Order cancelled
                         </option>

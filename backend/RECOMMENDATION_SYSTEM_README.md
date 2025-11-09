@@ -132,7 +132,7 @@ In `recommendationController.js`:
 
 ```javascript
 const minSupport = 0.05; // 5% minimum support (adjust for stricter/looser rules)
-const minConfidence = 0.3; // 30% minimum confidence (adjust recommendation threshold)
+const minConfidence = 0.6; // 60% minimum confidence (adjust recommendation threshold)
 ```
 
 **What to adjust:**

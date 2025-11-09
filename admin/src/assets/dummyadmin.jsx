@@ -1,7 +1,7 @@
 import {
     FiPlusCircle,
     FiList,
-    FiPackage,FiTruck, FiCheckCircle, FiClock, FiX, FiTag, FiUsers, FiMessageSquare,
+    FiPackage,FiTruck, FiCheckCircle, FiClock, FiX, FiTag, FiUsers, FiMessageSquare, FiBarChart2,
 } from 'react-icons/fi';
 
 
@@ -10,6 +10,7 @@ export const navLinks = [
     { name: 'List Items', href: '/list', icon: <FiList /> },
     { name: 'Special Offers', href: '/special-offers', icon: <FiTag /> },
     { name: 'Orders', href: '/orders', icon: <FiPackage /> },
+    { name: 'Statistics', href: '/statistics', icon: <FiBarChart2 /> },
     { name: 'Users', href: '/users', icon: <FiUsers /> },
     { name: 'Contact Queries', href: '/contact-queries', icon: <FiMessageSquare /> },
 ];

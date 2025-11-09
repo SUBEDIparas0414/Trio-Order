@@ -253,18 +253,22 @@ export const updateAnyOrder = async (req, res) => {
   try {
     const { status, expectedDelivery, deliveredAt } = req.body;
     
+    // Prevent admin from setting status to 'delivered' directly
+    // Only users can mark orders as delivered after receiving them
+    if (status === 'delivered') {
+      return res.status(400).json({ 
+        success: false,
+        message: "Admin cannot mark order as delivered. Only users can confirm delivery after receiving their order." 
+      });
+    }
+    
     // Prepare update data
     const updateData = { ...req.body };
     
-    // If status is being updated to delivered, set deliveredAt
-    if (status === 'delivered' && !deliveredAt) {
-      updateData.deliveredAt = new Date();
-    }
-    
-    // If status is being updated to outForDelivery, set expected delivery
+    // If status is being updated to outForDelivery, set expected delivery to 30 minutes from now
     if (status === 'outForDelivery' && !expectedDelivery) {
       const deliveryDate = new Date();
-      deliveryDate.setDate(deliveryDate.getDate() + 2); // 2 days from now
+      deliveryDate.setMinutes(deliveryDate.getMinutes() + 30); // 30 minutes from now
       updateData.expectedDelivery = deliveryDate;
     }
 
@@ -285,14 +289,15 @@ export const updateAnyOrder = async (req, res) => {
           pending: 'Pending',
           processing: 'Processing',
           preparing: 'Preparing',
-          outForDelivery: 'Out for Delivery',
+          outForDelivery: 'On the Way',
           delivered: 'Delivered',
           cancelled: 'Cancelled',
         };
         const title = `Order ${statusLabelMap[status] || status}`;
         let message = `Your order #${String(updated._id).slice(-8)} status is now ${statusLabelMap[status] || status}.`;
         if (status === 'outForDelivery' && updated.expectedDelivery) {
-          message += ` Expected delivery: ${new Date(updated.expectedDelivery).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}.`;
+          message += ` Expected delivery: within half an hour.`;
+          message += ` Please confirm delivery once you receive your order.`;
         }
         if (status === 'delivered' && updated.deliveredAt) {
           message += ` Delivered on ${new Date(updated.deliveredAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}.`;
@@ -416,6 +421,72 @@ export const deleteOrderByAdmin = async (req, res) => {
   }
 };
 
+// Customer: Mark order as delivered (only when status is outForDelivery)
+export const markOrderAsDelivered = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Order not found" 
+      });
+    }
+
+    // Check if user owns this order
+    if (!order.user.equals(req.user._id)) {
+      return res.status(403).json({ 
+        success: false,
+        message: "Access denied" 
+      });
+    }
+
+    // Only allow marking as delivered if status is outForDelivery
+    if (order.status !== 'outForDelivery') {
+      return res.status(400).json({ 
+        success: false,
+        message: `Order cannot be marked as delivered. Current status: ${order.status}. Order must be 'On the Way' (outForDelivery) first.` 
+      });
+    }
+
+    // Update order status to delivered and set deliveredAt timestamp
+    const updated = await Order.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'delivered',
+        deliveredAt: new Date()
+      },
+      { new: true }
+    );
+
+    // Create notification for admin about delivery confirmation
+    try {
+      await Notification.create({
+        userId: updated.user,
+        orderId: updated._id,
+        type: 'status_update',
+        title: 'Order Delivered - Confirmed by Customer',
+        message: `Order #${String(updated._id).slice(-8)} has been confirmed as delivered by the customer.`,
+        priority: 'high',
+      });
+    } catch (notifyErr) {
+      console.error('Failed to create delivery confirmation notification:', notifyErr);
+    }
+
+    res.json({
+      success: true,
+      message: "Order marked as delivered successfully",
+      order: updated
+    });
+  } catch (error) {
+    console.error("markOrderAsDelivered error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "server error", 
+      error: error.message 
+    });
+  }
+};
+
 // Customer: Soft delete their own order (only completed/cancelled orders)
 export const deleteOrderByCustomer = async (req, res) => {
   try {
@@ -467,6 +538,187 @@ export const deleteOrderByCustomer = async (req, res) => {
     });
   } catch (error) {
     console.error("deleteOrderByCustomer error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "server error", 
+      error: error.message 
+    });
+  }
+};
+
+// Get sales statistics (today, weekly, monthly, yearly)
+export const getSalesStatistics = async (req, res) => {
+  try {
+    const now = new Date();
+    
+    // Today's date range (start of day to end of day)
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    
+    // Weekly date range (last 7 days)
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 7);
+    weekStart.setHours(0, 0, 0, 0);
+    
+    // Monthly date range (current month)
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    // Yearly date range (current year)
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    
+    // Helper function to get statistics for a date range
+    const getStatsForRange = async (startDate, endDate, label) => {
+      const orders = await Order.find({
+        createdAt: { $gte: startDate, $lte: endDate },
+        deletedByAdmin: { $ne: true }
+      }).lean();
+      
+      // Calculate revenue (only from succeeded payments)
+      const revenue = orders
+        .filter(o => o.paymentStatus === 'succeeded')
+        .reduce((sum, o) => sum + (o.total || 0), 0);
+      
+      // Calculate total revenue (including pending payments)
+      const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+      
+      // Count orders by status
+      const statusCounts = {
+        pending: orders.filter(o => o.status === 'pending').length,
+        processing: orders.filter(o => o.status === 'processing').length,
+        preparing: orders.filter(o => o.status === 'preparing').length,
+        outForDelivery: orders.filter(o => o.status === 'outForDelivery').length,
+        delivered: orders.filter(o => o.status === 'delivered').length,
+        cancelled: orders.filter(o => o.status === 'cancelled').length,
+      };
+      
+      // Count orders by payment status
+      const paymentStatusCounts = {
+        pending: orders.filter(o => o.paymentStatus === 'pending').length,
+        succeeded: orders.filter(o => o.paymentStatus === 'succeeded').length,
+        failed: orders.filter(o => o.paymentStatus === 'failed').length,
+      };
+      
+      // Count orders by payment method
+      const paymentMethodCounts = {
+        cod: orders.filter(o => o.paymentMethod === 'cod').length,
+        online: orders.filter(o => o.paymentMethod === 'online').length,
+      };
+      
+      // Calculate average order value
+      const avgOrderValue = orders.length > 0 ? revenue / orders.length : 0;
+      
+      // Get top selling items
+      const itemCounts = {};
+      orders.forEach(order => {
+        order.items.forEach(item => {
+          const itemName = item.item?.name || 'Unknown';
+          if (!itemCounts[itemName]) {
+            itemCounts[itemName] = {
+              name: itemName,
+              quantity: 0,
+              revenue: 0,
+              orders: 0
+            };
+          }
+          itemCounts[itemName].quantity += item.quantity || 0;
+          itemCounts[itemName].revenue += (item.item?.price || 0) * (item.quantity || 0);
+          itemCounts[itemName].orders += 1;
+        });
+      });
+      
+      const topItems = Object.values(itemCounts)
+        .sort((a, b) => b.quantity - a.quantity)
+        .slice(0, 10);
+      
+      // Get daily breakdown for the period (for trends)
+      const dailyBreakdown = {};
+      
+      // Calculate the number of days in the period
+      const startDateCopy = new Date(startDate);
+      startDateCopy.setHours(0, 0, 0, 0);
+      const endDateCopy = new Date(endDate);
+      endDateCopy.setHours(23, 59, 59, 999);
+      
+      // Create entries for each day in the range
+      const currentDate = new Date(startDateCopy);
+      while (currentDate <= endDateCopy) {
+        // Use local date string to avoid timezone issues
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const dayKey = `${year}-${month}-${day}`;
+        
+        dailyBreakdown[dayKey] = {
+          date: dayKey,
+          orders: 0,
+          revenue: 0
+        };
+        
+        // Move to next day
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      // Process orders and match them to days
+      orders.forEach(order => {
+        const orderDate = new Date(order.createdAt);
+        // Use local date to match with dailyBreakdown keys
+        const year = orderDate.getFullYear();
+        const month = String(orderDate.getMonth() + 1).padStart(2, '0');
+        const day = String(orderDate.getDate()).padStart(2, '0');
+        const orderDayKey = `${year}-${month}-${day}`;
+        
+        if (dailyBreakdown[orderDayKey]) {
+          dailyBreakdown[orderDayKey].orders += 1;
+          if (order.paymentStatus === 'succeeded') {
+            dailyBreakdown[orderDayKey].revenue += order.total || 0;
+          }
+        }
+      });
+      
+      return {
+        label,
+        period: {
+          start: startDate,
+          end: endDate
+        },
+        summary: {
+          totalOrders: orders.length,
+          totalRevenue: totalRevenue,
+          confirmedRevenue: revenue, // Only from succeeded payments
+          avgOrderValue: avgOrderValue,
+          totalItems: orders.reduce((sum, o) => 
+            sum + o.items.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0), 0
+          )
+        },
+        statusBreakdown: statusCounts,
+        paymentStatusBreakdown: paymentStatusCounts,
+        paymentMethodBreakdown: paymentMethodCounts,
+        topItems: topItems,
+        dailyBreakdown: Object.values(dailyBreakdown).sort((a, b) => 
+          new Date(a.date) - new Date(b.date)
+        )
+      };
+    };
+    
+    // Get statistics for all periods
+    const todayStats = await getStatsForRange(todayStart, todayEnd, 'Today');
+    const weeklyStats = await getStatsForRange(weekStart, now, 'Last 7 Days');
+    const monthlyStats = await getStatsForRange(monthStart, monthEnd, 'This Month');
+    const yearlyStats = await getStatsForRange(yearStart, yearEnd, 'This Year');
+    
+    res.json({
+      success: true,
+      statistics: {
+        today: todayStats,
+        weekly: weeklyStats,
+        monthly: monthlyStats,
+        yearly: yearlyStats
+      }
+    });
+  } catch (error) {
+    console.error("getSalesStatistics error:", error);
     res.status(500).json({ 
       success: false,
       message: "server error", 
