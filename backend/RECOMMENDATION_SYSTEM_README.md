@@ -302,7 +302,7 @@ Recommendation: "Lassi, Buttermilk, Sweet Lime"
 
 ## Future Enhancements
 
-1. **Time-based Recommendations**: Different recommendations for breakfast/lunch/dinner
+1. **Time-based Recommendations**: Different recommendations for breakfast/lunch/salad
 2. **Seasonal Patterns**: Detect seasonal ordering trends
 3. **User Preferences**: Personalized based on individual history
 4. **A/B Testing**: Test different confidence thresholds

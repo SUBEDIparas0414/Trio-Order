@@ -10,6 +10,7 @@ const Navbar = () => {
     const [menuOpen, setMenuOpen] = useState(false);
     const navigate = useNavigate();
     const [orderCount, setOrderCount] = useState(0);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
     // Poll for new/pending orders every 2s (near real-time)
     useEffect(() => {
@@ -33,6 +34,13 @@ const Navbar = () => {
         return () => clearInterval(id);
     }, []);
 
+    // Handle window resize for responsive text
+    useEffect(() => {
+        const handleResize = () => setWindowWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('admin');
@@ -54,88 +62,99 @@ const Navbar = () => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="glass-elevated border-b border-white/10 sticky top-0 z-50"
+      className="bg-gradient-to-r from-[#121212] via-[#1A1A1A] to-[#121212] border-b border-white/10 sticky top-0 z-50 backdrop-blur-xl shadow-lg w-full"
     >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-5 lg:px-6 py-3 sm:py-3.5">
+          <div className="flex items-center justify-between gap-3 sm:gap-4 w-full">
             {/* Logo Section */}
             <motion.div 
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="flex items-center gap-2 sm:gap-3 cursor-pointer"
+              className="flex items-center gap-2 sm:gap-2.5 cursor-pointer flex-shrink-0"
               onClick={handleLogoClick}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-[#FF4C29] to-[#FF6B35] rounded-xl shadow-lg">
-                <GiChefToque className="text-xl sm:text-2xl text-white" />
+              <div className="p-1.5 sm:p-2 bg-gradient-to-br from-[#FF4C29] to-[#FF6B35] rounded-lg sm:rounded-xl shadow-lg">
+                <GiChefToque className="text-lg sm:text-xl lg:text-2xl text-white" />
               </div>
-              <span className="text-lg sm:text-h3 font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent">
+              <span className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-[#FF4C29] to-[#FFD369] bg-clip-text text-transparent whitespace-nowrap">
                 Admin Panel
               </span>
             </motion.div>
 
             {/* Desktop Menu */}
-            <div className="hidden lg:flex items-center gap-2">
-              {navLinks.map((link, index) => (
-                <motion.div
-                  key={link.name}
-                  initial={{ y: -20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
-                >
-                  <NavLink 
-                    to={link.href} 
-                    className={({isActive}) =>
-                      `flex items-center gap-2 px-3 xl:px-4 py-2 rounded-xl transition-all duration-300 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-[#FF4C29] to-[#FF6B35] text-white shadow-lg shadow-[#FF4C29]/25' 
-                          : 'text-[#B3B3B3] hover:text-white hover:bg-white/5'
-                      }`
-                    }
+            <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 flex-1 justify-center overflow-x-auto scrollbar-hide px-2">
+              {navLinks.map((link, index) => {
+                // Handle longer text for Contact Queries - show shorter on smaller screens
+                const displayName = link.name === 'Contact Queries' 
+                  ? windowWidth < 1280 ? 'Queries' : 'Contact Queries'
+                  : link.name;
+                
+                return (
+                  <motion.div
+                    key={link.name}
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+                    className="flex-shrink-0"
                   >
-                    <span className="text-base xl:text-lg">{link.icon}</span>
-                    <span className="font-medium relative inline-flex items-center text-sm xl:text-base">
-                      {link.name}
-                      {link.name === 'Orders' && orderCount > 0 && (
-                        <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-black bg-amber-400 rounded-full">
-                          {orderCount}
-                        </span>
-                      )}
-                    </span>
-                  </NavLink>
-                </motion.div>
-              ))}
-              
-              {/* Admin Info and Logout */}
-              <motion.div 
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                className="flex items-center gap-3 xl:gap-4 ml-4 xl:ml-6 pl-4 xl:pl-6 border-l border-white/10"
-              >
-                <div className="text-xs xl:text-body-sm text-[#B3B3B3] font-medium hidden xl:block truncate max-w-[200px]">
-                  {adminInfo.email}
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 xl:px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:border-red-400 hover:bg-red-500/10 transition-all duration-300"
-                >
-                  <FiLogOut className="text-base xl:text-lg" />
-                  <span className="font-medium text-sm xl:text-base">Logout</span>
-                </motion.button>
-              </motion.div>
+                    <NavLink 
+                      to={link.href} 
+                      title={link.name}
+                      className={({isActive}) =>
+                        `flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3 py-2 xl:py-2.5 rounded-lg xl:rounded-xl transition-all duration-300 whitespace-nowrap ${
+                          isActive 
+                            ? 'bg-gradient-to-r from-[#FF4C29] to-[#FF6B35] text-white shadow-md shadow-[#FF4C29]/25' 
+                            : 'text-[#B3B3B3] hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10'
+                        }`
+                      }
+                    >
+                      <span className="text-base xl:text-lg flex-shrink-0">{link.icon}</span>
+                      <span className="font-semibold relative inline-flex items-center text-xs xl:text-sm 2xl:text-base">
+                        {displayName}
+                        {link.name === 'Orders' && orderCount > 0 && (
+                          <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-4.5 px-1 text-[10px] xl:text-xs font-bold text-black bg-amber-400 rounded-full">
+                            {orderCount}
+                          </span>
+                        )}
+                      </span>
+                    </NavLink>
+                  </motion.div>
+                );
+              })}
             </div>
+              
+            {/* Admin Info and Logout - Desktop */}
+            <motion.div 
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="hidden lg:flex items-center gap-2 xl:gap-3 ml-2 xl:ml-3 pl-2 xl:pl-3 border-l border-white/10 flex-shrink-0"
+            >
+              {adminInfo.username && (
+                <div className="hidden xl:block text-sm xl:text-base text-[#FFD369] font-semibold truncate max-w-[120px] 2xl:max-w-[150px]">
+                  {adminInfo.username}
+                </div>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 xl:gap-2 px-2.5 xl:px-3 py-2 xl:py-2.5 rounded-lg xl:rounded-xl border border-red-500/30 text-red-400 hover:border-red-400 hover:bg-red-500/10 transition-all duration-300 whitespace-nowrap font-semibold"
+              >
+                <FiLogOut className="text-base xl:text-lg" />
+                <span className="text-sm xl:text-base">Logout</span>
+              </motion.button>
+            </motion.div>
 
             {/* Mobile Menu Button */}
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-2 rounded-xl bg-white/5 text-white hover:bg-white/10 transition-all duration-300"
+              className="lg:hidden p-2 rounded-lg bg-white/5 text-white hover:bg-white/10 transition-all duration-300 flex-shrink-0"
             >
               {menuOpen ? <FiX className="text-xl" /> : <FiMenu className="text-xl" />}
             </motion.button>
@@ -150,32 +169,32 @@ const Navbar = () => {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="lg:hidden border-t border-white/10 bg-black/20 backdrop-blur-xl"
+              className="lg:hidden border-t border-white/10 bg-black/30 backdrop-blur-xl"
             >
-              <div className="px-4 sm:px-6 py-4 space-y-2">
+              <div className="px-3 sm:px-4 py-3 space-y-1.5">
                 {navLinks.map((link, index) => (
                   <motion.div
                     key={link.name}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: index * 0.1, duration: 0.3 }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
                   >
                     <NavLink 
                       to={link.href}
                       onClick={() => setMenuOpen(false)}
                       className={({isActive}) =>
-                        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                        `flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                           isActive 
-                            ? 'bg-gradient-to-r from-[#FF4C29] to-[#FF6B35] text-white' 
+                            ? 'bg-gradient-to-r from-[#FF4C29] to-[#FF6B35] text-white shadow-md' 
                             : 'text-[#B3B3B3] hover:text-white hover:bg-white/5'
                         }`
                       }
                     >
-                      <span className="text-xl">{link.icon}</span>
-                      <span className="font-medium inline-flex items-center">
+                      <span className="text-lg">{link.icon}</span>
+                      <span className="font-medium inline-flex items-center text-sm">
                         {link.name}
                         {link.name === 'Orders' && orderCount > 0 && (
-                          <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-black bg-amber-400 rounded-full">
+                          <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-4.5 px-1 text-[10px] font-bold text-black bg-amber-400 rounded-full">
                             {orderCount}
                           </span>
                         )}
@@ -188,20 +207,24 @@ const Navbar = () => {
                 <motion.div 
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.3 }}
-                  className="pt-4 mt-4 border-t border-white/10"
+                  transition={{ delay: 0.3, duration: 0.3 }}
+                  className="pt-3 mt-3 border-t border-white/10"
                 >
-                  <div className="text-sm text-[#B3B3B3] mb-3 px-4 font-medium break-all">
-                    {adminInfo.email}
-                  </div>
+                  {adminInfo.username && (
+                    <div className="px-3 mb-2.5">
+                      <div className="text-sm text-[#FFD369] font-semibold break-all">
+                        {adminInfo.username}
+                      </div>
+                    </div>
+                  )}
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-red-500/30 text-red-400 hover:border-red-400 hover:bg-red-500/10 transition-all duration-300 w-full"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-red-500/30 text-red-400 hover:border-red-400 hover:bg-red-500/10 transition-all duration-300 w-full"
                   >
-                    <FiLogOut className="text-xl" />
-                    <span className="font-medium">Logout</span>
+                    <FiLogOut className="text-lg" />
+                    <span className="font-medium text-sm">Logout</span>
                   </motion.button>
                 </motion.div>
               </div>

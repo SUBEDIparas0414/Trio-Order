@@ -19,7 +19,7 @@ const AddItems = () => {
   });
 
   const [categories] = useState([
-    'Breakfast', 'Lunch', 'Dinner', 'Mexican', 'Italian', 'Desserts', 'Drinks'
+    'Breakfast', 'Lunch', 'Salad', 'Snacks', 'Soups', 'Desserts', 'Drinks'
   ]);
 
   const [hoverRating, setHoverRating] = useState(0);
@@ -92,14 +92,14 @@ const AddItems = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] flex items-center justify-center px-4 sm:px-6 py-6 sm:py-8"
+      className="min-h-[calc(100vh-80px)] bg-gradient-to-br from-[#121212] via-[#1A1A1A] to-[#242424] flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12"
     >
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-3xl">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="card-glass p-4 sm:p-6 lg:p-8"
+          className="card-glass p-6 sm:p-8 lg:p-10 shadow-2xl"
         >
           <motion.h2 
             initial={{ y: -20, opacity: 0 }}
@@ -116,20 +116,28 @@ const AddItems = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="flex justify-center"
+              className="flex justify-center mb-2"
             >
-              <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-4 sm:p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-xs mx-auto h-40 sm:h-48">
+              <label className="cursor-pointer border-2 border-dashed border-[#FF4C29]/50 rounded-xl p-4 sm:p-6 flex justify-center items-center bg-white/5 hover:bg-white/10 hover:border-[#FF4C29] transition-all duration-300 w-full max-w-sm mx-auto h-48 sm:h-56 overflow-hidden group">
                 {formData.preview ? (
-                  <img
-                    src={formData.preview}
-                    alt="Preview"
-                    className="max-h-full rounded-lg shadow-md object-cover"
-                  />
+                  <div className="relative w-full h-full">
+                    <img
+                      src={formData.preview}
+                      alt="Preview"
+                      className="w-full h-full rounded-lg shadow-md object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <p className="text-white text-sm font-medium">Click to change image</p>
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center text-center">
-                    <FiUpload className="text-4xl text-[#FF4C29] mb-3" />
-                    <p className="text-[#B3B3B3] text-sm">
+                    <FiUpload className="text-5xl text-[#FF4C29] mb-3 group-hover:scale-110 transition-transform" />
+                    <p className="text-[#B3B3B3] text-sm font-medium">
                       Click to upload product image
+                    </p>
+                    <p className="text-[#808080] text-xs mt-1">
+                      PNG, JPG, WEBP up to 5MB
                     </p>
                   </div>
                 )}
@@ -149,13 +157,13 @@ const AddItems = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <label className="block text-[#B3B3B3] mb-2 font-medium">Product Name</label>
+              <label className="block text-[#B3B3B3] mb-2.5 font-semibold text-sm">Product Name <span className="text-red-400">*</span></label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="input"
+                className="input w-full"
                 placeholder="Enter Product Name"
                 required
               />
@@ -167,13 +175,13 @@ const AddItems = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              <label className="block text-[#B3B3B3] mb-2 font-medium">Description</label>
+              <label className="block text-[#B3B3B3] mb-2.5 font-semibold text-sm">Description <span className="text-red-400">*</span></label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="Enter product description"
-                className="input h-32 resize-none"
+                placeholder="Enter product description (e.g., ingredients, taste, serving size)"
+                className="input h-32 resize-none w-full"
                 required
               />
             </motion.div>
@@ -184,12 +192,12 @@ const AddItems = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <label className="block text-[#B3B3B3] mb-2 font-medium">Category</label>
+              <label className="block text-[#B3B3B3] mb-2.5 font-semibold text-sm">Category <span className="text-red-400">*</span></label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                className="input"
+                className="input w-full cursor-pointer"
                 required
               >
                 <option value="">Select Category</option>
@@ -207,17 +215,17 @@ const AddItems = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <label className="block text-[#B3B3B3] mb-2 font-medium">Price (₹)</label>
+              <label className="block text-[#B3B3B3] mb-2.5 font-semibold text-sm">Price (₹) <span className="text-red-400">*</span></label>
               <div className="relative">
-                <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-base pointer-events-none" />
+                <FaRupeeSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#FFD369] text-lg pointer-events-none z-10" />
                 <input
                   type="number"
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  className="input"
-                  placeholder="Enter Price"
-                  style={{ paddingLeft: '2.5rem' }}
+                  className="input w-full"
+                  placeholder="0.00"
+                  style={{ paddingLeft: '2.75rem' }}
                   min="0"
                   step="0.01"
                   required
@@ -230,14 +238,14 @@ const AddItems = () => {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8"
             >
               {/* Rating */}
-              <div>
-                <label className="block mb-2 text-[#B3B3B3] font-medium">
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <label className="block mb-3 text-[#B3B3B3] font-semibold text-sm">
                   Rating
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   {[1, 2, 3, 4, 5].map(star => (
                     <motion.button
                       key={star}
@@ -258,15 +266,20 @@ const AddItems = () => {
                       />
                     </motion.button>
                   ))}
+                  {formData.rating > 0 && (
+                    <span className="ml-2 text-[#FFD369] font-semibold text-sm">
+                      {formData.rating}/5
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Popularity */}
-              <div>
-                <label className="block mb-2 text-[#B3B3B3] font-medium">
-                  Popularity
+              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                <label className="block mb-3 text-[#B3B3B3] font-semibold text-sm">
+                  Popularity (Likes)
                 </label>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <motion.button
                     type="button"
                     onClick={handleHearts}
@@ -281,8 +294,8 @@ const AddItems = () => {
                     name="hearts"
                     value={formData.hearts}
                     onChange={handleInputChange}
-                    className="input w-32"
-                    placeholder="Likes"
+                    className="input flex-1"
+                    placeholder="0"
                     min="0"
                   />
                 </div>
@@ -297,7 +310,7 @@ const AddItems = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit" 
-              className="btn-primary w-full"
+              className="btn-primary w-full py-3.5 text-base font-semibold mt-2"
             >
               Add To Menu
             </motion.button>
